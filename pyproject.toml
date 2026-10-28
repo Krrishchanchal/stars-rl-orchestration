@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools==80.9.0", "wheel==0.45.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stars-rl"
+version = "0.1.0"
+description = "Optimization-based STARS orchestration with an RL weight-selection extension"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+authors = [{ name = "STARS-RL contributors" }]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+]
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest==8.4.2"]
+
+[project.scripts]
+stars-rl = "stars_rl.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers"
+testpaths = ["tests"]
+

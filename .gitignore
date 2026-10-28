@@ -1,0 +1,26 @@
+# Python and local environments
+__pycache__/
+*.py[cod]
+.venv/
+.venv-*/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+.tmp/
+
+# Local credentials
+.env
+.env.*
+!.env.example
+
+# Generated large artifacts
+data/generated/
+checkpoints/
+runs/
+
+# Source PDFs are not redistributed with this project
+*.pdf
+
+# Local implementation planning and handoff notes
+/docs/
+/CONTEXT.md
