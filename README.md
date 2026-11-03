@@ -200,7 +200,7 @@ builder contains no placement/routing/CPU/radio/delay variables or constraints;
 Stage I objectives and orchestration are still pending. Discrete-model solutions
 do not certify CPU, radio throughput, delay or complete deployment feasibility.
 The resource/delay additions below and independent validator are required for that
-approval. CPU allocation is continuous in the C07 draft.
+approval. CPU allocation is continuous.
 
 From the repository root:
 
@@ -218,7 +218,7 @@ arguments are in `tests/fixtures/discrete_oracles.json`. Raw values remain in th
 solver record; `decode_binary` rejects values outside the fixed integrality target
 and does not substitute for constraint validation.
 
-## C07 draft: CPU, radio and end-to-end delay
+## CPU, radio and end-to-end delay
 
 `build_full_model(scenario, window)` extends the discrete model with C13–C16,
 CPU gating, activation overhead, instance limits, occupancy-dependent radio and
@@ -238,7 +238,7 @@ each visible user/satellite/positive-occupancy combination. Service is summed
 over the selected satellite once per user. Bandwidth/noise/rates come from the
 physical radio inputs. Explicit authored coefficient tables are permitted only
 for labeled analytical fixtures, whose original trusted tables must also be
-available to the future independent validator.
+supplied separately to the independent validator.
 
 All five propagation classes, every candidate processing term and access
 serialization enter C16. The builders retain a constant feasibility objective;
@@ -261,11 +261,44 @@ solver result, decoded choices, all candidate reciprocal/CPU values, activations
 occupancies, rates and encoded delay components. No-incumbent outcomes retain
 their status and have no candidate. Exported reports say `validation: not_run`.
 An optimal solver status or a C04-helper consistency comparison does not approve
-a deployment. C07 and C08 are accepted jointly; full raw/decoded residual checks
-and corruption tests remain pending. No Stage I/II, simulation or RL acceptance
-claim follows from the draft.
+a deployment. The independent C08 validator checks full raw/decoded residuals
+and corrupted exports; the joint C07/C08 acceptance gate passes. Stage I/II,
+simulation and RL remain later work.
 
 Analytical expectations and limits are in `tests/fixtures/resource_oracles.json`.
+
+## Independent deployment validation
+
+`validate_export(scenario, window, exported)` in `stars_rl.validation.deployment`
+returns a separate report with status, reason, residual units, thresholds,
+normalized violations and independently recomputed per-user delays. It consumes
+plain exported data without a live solver, reconstructs shortest-path costs and
+radio rates independently, checks raw algebra and decoded physical constraints,
+and sums processing reconstruction errors across every candidate, including
+inactive ones. No solver optimality status bypasses these checks.
+
+```python
+from stars_rl.validation.deployment import validate_export
+
+validation = validate_export(scenario, window, exported)
+if not validation.valid:
+    print(validation.status, validation.errors)
+    print([row for row in validation.residuals if not row.passed])
+```
+
+For analytical coefficient fixtures, pass the original trusted table separately
+as `radio_coefficients=original_rates`; exported coefficients cannot certify
+themselves. Unknown identities, malformed fields and nonfinite values are rejected.
+No-incumbent reports preserve the solver cause and never approve a deployment.
+Validation establishes feasibility within the registered original-unit tolerances,
+not optimality. Redundant export fields use a small floating arithmetic roundoff
+envelope; this does not relax any feasibility threshold.
+
+The test suite includes 128 full-model extreme cases, all toy windows, literal
+allocation oracles, each residual family's boundary, and adversarial processing,
+CPU, routing, occupancy and throughput cases. Tests and public oracle metadata
+are in `tests/unit/test_validator.py`, `tests/unit/test_residuals.py`,
+`tests/solver/test_export_validation.py` and `tests/fixtures/validator_oracles.json`.
 
 ## Scientific scope
 

@@ -1,0 +1,10 @@
+{
+  "milestone": "C08 joint C07/C08 gate",
+  "independence": "Validator imports no optimizer, physics helper or shortest-path builder. Hand-authored exports are constructed without SCIP or production exporters; integration exports are a separate layer.",
+  "manual_baseline": {"users":1,"satellites":1,"function_types":1,"instances":2,"chain_length":1,"demand_mbps":2,"psi":10,"omega":10,"packet_bits":12000,"cpu_mips":40,"capacity_mips":100,"overhead_mips":5,"access_m":300000,"ground_m":300000,"trusted_fixture_rate_bps":12000000,"expected":{"minimum_cpu_mips":20,"amplitude":0.12,"processing_seconds":0.003,"serialization_seconds":0.001,"propagation_formula":"600000/299792458","total_formula":"600000/299792458+0.003+0.001"}},
+  "residual_boundaries": "Inject 0.5 and 2 times each declared threshold. Family abs/relative tolerances come from execution contract section8; exact decoded logic uses zero tolerance. A passing row never excuses a separate failing family.",
+  "inactive_budget": {"inactive_terms":476,"tau_each":1e-9,"time_scale_seconds":0.108,"expected_sum_seconds":5.1408e-8,"budget_seconds":5e-8,"expected":"reject even though each dimensionless reciprocal error is below1e-8"},
+  "mixed_budget": {"inactive_error_seconds":4.99e-8,"active_error_seconds":2e-10,"expected_sum_seconds":5.01e-8,"expected":"reject aggregate; individual active and inactive totals are each below5e-8"},
+  "alloc2": [{"A":[1,4],"G":[3,6],"L":[1,1],"capacity":9,"expected_delay":1},{"A":[1,4],"G":[4,5],"L":[4,1],"capacity":9,"expected_delay":1.05}],
+  "scope": "Feasibility within declared original-unit tolerances, not a proof of optimization optimality or a deadline/deployment policy. Later objective/deviation row families require explicit validator extensions."
+}

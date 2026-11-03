@@ -1,4 +1,4 @@
-"""C07 draft full-feasible-set builder and lossless plain-data candidate export.
+"""Full-feasible-set builder and lossless plain-data candidate export.
 
 No deployment is approved here. C08 independent validation is mandatory.
 """
