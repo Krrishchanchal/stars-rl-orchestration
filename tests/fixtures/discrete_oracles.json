@@ -1,0 +1,13 @@
+{
+  "milestone": "C06",
+  "scope": "Binary C1-C12 and endpoint connectivity only; resource/nonlinear/full-deployment validation remains C07/C08",
+  "association_enumeration": {"fixture": "2 users, 2 visible satellites, one GS, access/egress capacities1 each", "raw_bit_count": 8, "total_patterns": 256, "expected_feasible": 4, "expected_infeasible": 252, "derivation": "Each user needs one access and one egress; capacities require a permutation in each pool; 2!*2!=4."},
+  "placement_enumeration": {"fixture": "1 user, 1 stage, 2 hosts, 2 compatible instances per host; connected graph", "total_patterns": 16, "expected_feasible": 4, "derivation": "C7 permits exactly one of four compatible assignment bits; C8/C9 determine activation."},
+  "and_truth_table": {"valid_rows": [[0,0,0],[0,1,0],[1,0,0],[1,1,1]], "isolated_invalid": {"C10_source": [0,1,1], "C11_target": [1,0,1], "C12_both": [1,1,0]}},
+  "joint_objective": {"fixture": "1 user, 2 stages, 2 hosts, one GS; access/egress visible at both satellites; placement type-compatible", "class_order": ["access","stage0-host","stage1-host","egress"], "costs_a_b": [[4,1],[2,5],[7,1],[1,3]], "connected": {"feasible_classes":16,"minimum_cost":5,"best_class":["b","a","b","a"]}, "disconnected": {"feasible_classes":2,"minimum_cost":10,"best_class":["b","b","b","b"]}, "note": "Algebraic test objective only; no STARS objective is introduced by C06."},
+  "gateway_correction": "One (satellite,GS) pair per user globally; literal one-pair-per-satellite conflicts on two satellites. Egress capacity counts user flows over all GS choices once per satellite; access pool is separate.",
+  "activation": "Two users sharing one slice/function/instance give eligible occurrence bound2 and activation count1. Same instance ID at different hosts gives different activation keys. Zero eligible type forces activation0. Overhead charging is C07.",
+  "unreachable_segments": ["O-ENDACCESS: access a, hosts[b,b], egress b", "O-ENDINTERNAL: access a, hosts[a,b], egress b", "O-ENDEGRESS: access a, hosts[a,a], egress b"],
+  "unreachable_fixture": "Isolated nodes a/b; only a sees user and only b sees GS. Each fixed candidate must be infeasible inside SCIP; adding bridge a-b at100000m makes it discretely feasible. No resource/SLA claim.",
+  "domain_proof": "Omitted alpha/xi correspond only to invisible edges (C2/C5 require0). Beta creates only stage-compatible existing (type,id,host) instances. All compatible hosts, including zero-CPU and multi-hop hosts, remain. Unreachable product variables are omitted together with explicit endpoint-sum<=1 rows; every reachable pair including identity is retained. No nearest-host or capacity pruning."
+}

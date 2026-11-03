@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The project is being implemented incrementally. The current release provides the Python package, CLI, a verified SCIP backend capability check, validated scenario/deployment schemas, direct numeric physics calculations, and immutable authored toy traces with deterministic shortest paths. The STARS optimization model, simulations, and RL functionality are not implemented yet.
+The project is being implemented incrementally. The current release provides the Python package, CLI, a verified SCIP backend capability check, validated schemas, direct numeric physics, immutable authored traces, and the discrete C1–C12 optimization layer. CPU/radio/delay constraints, the full STARS workflow, simulations, and RL functionality remain pending.
 
 ## Requirements
 
@@ -169,8 +169,54 @@ and different input insertion orders normalize identically. Stable entity IDs
 remain semantic keys. The frozen toy content hash is recorded with independent
 fixture derivations in `tests/fixtures/topology_oracles.json`.
 
-This builder supports authored toy/analytical inputs. Physical trace generation,
-matching audits, optimization and episode simulation remain later milestones.
+This trace builder supports authored toy/analytical inputs. Physical trace generation,
+matching audits, full optimization and episode simulation remain later milestones.
+
+## Discrete optimization layer
+
+`build_association_model(scenario, window)` creates binary associations and corrected
+C1–C6 feasibility constraints. Each user selects exactly one access satellite and
+exactly one `(satellite, ground station)` egress pair globally. Egress capacity
+counts user flows across all ground-station choices once per satellite; access
+capacity is a separate pool. Invisible access/gateway choices are absent from the
+variable domain, representing the zero values required by C2/C5. No aggregate
+ground-station capacity is added.
+
+`build_discrete_model(scenario, window)` adds C7–C12, compatible instance choices,
+activation equivalence, and all access/host/egress linkage classes. Instances keep
+their `(type, instance_id, host)` identities. An instance activates exactly when
+at least one eligible user-stage selects it; the activation upper bound counts
+eligible user-stage occurrences, including users sharing a slice.
+
+Reachable multi-hop hosts remain available regardless of direct user visibility.
+The binary domain retains compatible instances on zero-CPU hosts; resource
+constraints in the next milestone will reject their active use. Unreachable
+link products are omitted together with explicit endpoint prohibition rows,
+and every route-link class must sum to one. No nearest-host filtering is used.
+All constraints/variables have deterministic source-family/entity names.
+
+Both builders currently use a constant feasibility objective. The association
+builder contains no placement/routing/CPU/radio/delay variables or constraints;
+Stage I objectives and orchestration are still pending. Discrete-model solutions
+do not certify CPU, radio throughput, delay or complete deployment feasibility.
+The later full model and independent validator are required for that approval.
+CPU allocation remains a continuous optimization decision for the next milestone.
+
+From the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -c "from stars_rl.config import load_scenario; from stars_rl.topology.trace import build_trace; from stars_rl.optimization.constraints import build_discrete_model; t = build_trace(load_scenario('configs/toy.yaml')); m, v = build_discrete_model(t.scenario, t.windows[0]); print(len(v.alpha), len(v.xi), len(v.beta))"
+.\.venv\Scripts\python.exe -m pytest tests/solver/test_association.py tests/solver/test_placement.py tests/solver/test_activation.py tests/solver/test_linkage.py -m solver -q
+```
+
+The first command prints `4 4 24`. Solver checks include all 256 association-bit
+patterns, all 16 tiny placement-bit patterns, AND truth tables, type/identity
+checks and isolated disconnected-route fixtures. A hand-enumerated joint objective
+checks the discrete model on connected/disconnected graphs; it is an algebraic
+test objective, not a STARS objective. Exact fixture expectations and safe-domain
+arguments are in `tests/fixtures/discrete_oracles.json`. Raw values remain in the
+solver record; `decode_binary` rejects values outside the fixed integrality target
+and does not substitute for constraint validation.
 
 ## Scientific scope
 
