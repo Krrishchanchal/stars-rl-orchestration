@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The project is being implemented incrementally. The current release provides the Python package, CLI, and a verified SCIP backend capability check. The STARS network model, simulations, and RL functionality are not implemented yet.
+The project is being implemented incrementally. The current release provides the Python package, CLI, a verified SCIP backend capability check, and validated scenario/deployment schemas with an explicit toy configuration. The STARS network model, simulations, and RL functionality are not implemented yet.
 
 ## Requirements
 
@@ -55,6 +55,40 @@ independent deployment validator is still pending. No solver test is silently sk
 Verified on Windows with CPython 3.11.4, PySCIPOpt 6.3.0 and bundled SCIP 10.0.2.
 The pinned Windows wheel installs without a separate SCIP installation or solver license.
 Linux CI is configured; its remote execution has not been verified here.
+
+## Scenario inputs
+
+`configs/toy.yaml` freezes `toy-v1`: two users, three satellites (one with zero CPU),
+two function types and three 60-second windows. It includes every instance identity,
+resource pool, radio constant, access window, ground link and undirected ISL distance.
+It is synthetic connectivity, not an orbital scenario. Feasibility is not yet established.
+
+After installing the current lock files, inspect its schema from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -c "from stars_rl.config import load_scenario; s = load_scenario('configs/toy.yaml'); print(s.scenario_id, len(s.users), s.window_count)"
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_config.py -q
+```
+
+The first command prints `toy-v1 2 3`. Loading performs no sampling or solving.
+Inputs are immutable typed records; unknown/missing fields, incorrect units/types,
+duplicate identities, nonfinite numbers and repeated function types are rejected.
+The numeric domain currently follows the backend calibration: demand 2–20 Mbps,
+psi/omega 5–90 instructions/bit, packet size 512–12000 bits, 1–4 stages and CPU
+0–2000 MIPS. Other positive physical constants and nonnegative overhead are explicit.
+
+Demand, chain and SLA belong to each slice and apply to each of its users;
+psi, omega and overhead belong to each function type. Access and egress pools are
+separate. Instances use `(function_type_id, instance_id, satellite_id)` identities.
+Generation metadata preserves family/lineage, named seeds and scoped original draws;
+no physical scenario generator exists yet.
+
+`scenario_to_dict` / `scenario_from_dict` and `dump_scenario` / `load_scenario`
+provide round-trips. Deployment/outcome serializers and
+`validate_deployment_structure` check IDs, completeness and type compatibility.
+They do not certify CPU, radio, routing, visibility or delay feasibility; that needs
+the later independent deployment validator. A candidate outcome is not a deployment
+approval. Toy trace/path construction remains a later milestone.
 
 ## Scientific scope
 

@@ -6,4 +6,5 @@ Pygments==2.21.0
 pytest==8.4.2
 numpy==2.4.6
 PySCIPOpt==6.3.0
+PyYAML==6.0.3
 
