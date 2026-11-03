@@ -1,0 +1,10 @@
+{
+  "scope": "fixed-method episode transactions, not RL checkpoint state",
+  "initial_boundary": {"next_episode_index": 0, "active_deployment": null},
+  "completed_boundary": {"next_episode_index": 1, "active_deployment": null},
+  "interruption": "archive entire partial attempt as abandoned and replay episode0",
+  "native_stages": ["stage1", "stage2", "monolithic"],
+  "transaction_authority": "manifest status and artifact hash map",
+  "paired_methods": "identical trace content hash; distinct method subdirectories",
+  "seed": 0
+}

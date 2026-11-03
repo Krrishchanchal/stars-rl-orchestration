@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. Experiment manifests, physical trace generation and RL remain later milestones.
+The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Physical trace generation and RL remain later milestones.
 
 ## Requirements
 
@@ -43,7 +43,7 @@ python3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-Invalid CLI options return a nonzero exit status. Optimization and episode simulation are available through the Python APIs below; standalone simulation and training CLI commands remain later work.
+Invalid CLI options return a nonzero exit status. Optimization and episode simulation are available through the Python APIs and CLI below. Training remains later work.
 
 The doctor prints JSON containing analytical assignment and nonlinear reciprocal checks,
 raw statuses, stage-local bounds/gaps, versions and warm-start diagnostics. Its exit status
@@ -468,10 +468,81 @@ labeled `native_initialization`. Results from these studies must not be merged.
 Synthetic analytical rates require original trusted tables supplied as
 `radio_coefficients_by_window={window_index: table}`.
 
-`simulate` commits in memory and returns dataclass records. Transactional files,
-run manifests, recovery and simulation CLI commands are C13 work. `services`
-injection is for controlled runtime tests and labels results as test adapters.
+`simulate` commits in memory and returns dataclass records. The experiment runner
+below publishes transactional files and manifests. `services` injection is for
+controlled runtime tests and labels results as test adapters.
 These tiny tests are not physical-scale or RL performance evidence.
+
+## Reproducible experiment CLI
+
+From the repository root, using the Python environment where this package is installed:
+
+```powershell
+.\.venv-c03\Scripts\python.exe -m stars_rl.cli generate --scenario configs/toy.yaml --output runs/toy-trace.json
+.\.venv-c03\Scripts\python.exe -m stars_rl.cli simulate --trace runs/toy-trace.json --run-id demo-c13 --method stars-fixed --rho 0.5 --budget 10
+.\.venv-c03\Scripts\python.exe -m stars_rl.cli validate --run-dir runs/demo-c13/stars-fixed
+```
+
+`generate` materializes **authored** scenarios and records offline preparation
+cost in a sidecar. Orbital generation/audits remain C14. `validate --trace PATH`
+checks cached paths and hashes against the original scenario. The normalized
+trace-content hash excludes arbitrary provenance labels; its separate artifact
+hash retains the exact trace identity and group/lineage metadata.
+
+Runs live under `OUTPUT_ROOT/RUN_ID/METHOD/`, defaulting to `runs/`. Different
+methods can share a run ID and the same saved trace for paired comparisons;
+an existing method run cannot be overwritten. `--config FILE` reads JSON/YAML
+keys `method_id`, `rho`, `window_budget_seconds`, `solver_seed`; explicit CLI flags
+override them. `configs/fixed_experiment.yaml` is a ready-to-run example.
+Solver seed 0 and one thread remain frozen. `--initial-export` selects
+the separately labeled common-initial-state study. Analytical fixture coefficients
+use `--radio-coefficients FILE`, a list of original records with `window_index`,
+`user_id`, `satellite_id`, `occupancy`, `rate_bps`; empty visibility windows retain
+empty tables. Missing coefficients for visible choices remain input errors.
+
+A run saves the resolved settings, trace, original coefficient/initial-state
+inputs, group lineage, generation seeds/draws, code/Git state, installed versions,
+SCIP parameters, hardware, per-window decision times, post-decision serialization
+and audit times, and a computational source/lockfile snapshot.
+The source snapshot permits inspection of dirty-tree runs without relying on a
+notebook. Source lives under `source/` with its original `pyproject.toml` and
+`src/` layout. Decisions, metrics, raw stage-local results, independent validation
+and summary projections have recorded SHA-256 hashes.
+
+An attempt is published only when its complete file transaction passes independent
+verification and `manifest.json` atomically marks it completed (or aborted).
+Pending folders and standalone summary files do not establish a successful run.
+`validate --run-dir` checks hashes, schemas, committed state chains, actual metrics,
+Stage I references, full deployments and objectives again. It checks feasibility
+and artifact integrity, not historical solver optimality or a timing guarantee.
+
+Recovery uses **whole-episode replay from the initial boundary**, including an
+interruption in episode 0:
+
+```powershell
+.\.venv-c03\Scripts\python.exe -m stars_rl.cli simulate --run-id demo-c13 --method stars-fixed --resume
+```
+
+The runner first checks saved config, exact trace identity, boundary-state hash,
+code revision/source, dependency/backend versions and hardware compatibility.
+Partial attempts are retained as `abandoned-NNNN`; a fresh attempt resets all
+active deployment state. Completed compatible runs are verified and returned
+without solving again. Locks release after worker exit; concurrent workers cannot
+publish the same run. A code/environment change requires a new run ID.
+
+These are single fixed-method episode checkpoints, with no policy RNG or Q-table
+state. They do not implement the later RL training checkpoint contract or
+mid-episode continuation. Modeled failure completes an episode and retains failed
+and `not_attempted` windows. Numerical/infrastructure failures publish diagnostic
+aborted runs, never advance the boundary, and require diagnosis rather than auto
+replay. Invalid raw numbers in aborted diagnostics have explicit `invalid_numeric`
+tags; they never become valid numeric decisions.
+
+CLI exit codes are 0 for a successful simulation or valid usable artifacts,
+1 for a modeled failed episode or aborted diagnostic, and 2 for invalid inputs
+or incompatible recovery.
+Known network failure artifacts can still pass artifact validation. `runs/` is
+ignored by Git; keep generated results and any private inputs out of public commits.
 
 ## Scientific scope
 

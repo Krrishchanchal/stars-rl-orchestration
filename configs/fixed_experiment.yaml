@@ -1,0 +1,5 @@
+# Fixed-method diagnostic. This is not a validation-tuned comparator.
+method_id: stars-fixed
+rho: 0.5
+window_budget_seconds: 10
+solver_seed: 0
