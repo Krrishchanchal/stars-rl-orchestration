@@ -50,6 +50,12 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark.add_argument('--output',required=True,type=Path)
     benchmark.add_argument('--sizes',nargs='+',default=['2:1','4:2','8:4'])
     benchmark.add_argument('--budget',type=float,default=10)
+    sensitivity=commands.add_parser('action-sensitivity',help='Replay all five objective ratios without training')
+    sensitivity_source=sensitivity.add_mutually_exclusive_group(required=True)
+    sensitivity_source.add_argument('--trace',type=Path)
+    sensitivity_source.add_argument('--constructed',action='store_true')
+    sensitivity.add_argument('--output',required=True,type=Path)
+    sensitivity.add_argument('--budget',type=float,default=None)
     return parser
 
 
@@ -57,6 +63,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run the command-line interface and return its success status."""
     args = build_parser().parse_args(argv)
     try:
+        if args.command=='action-sensitivity':
+            from stars_rl.experiments.manifest import atomic_json
+            if args.output.exists():raise ValueError('sensitivity output exists; choose a new path')
+            if args.constructed:
+                from stars_rl.rl.fixtures import constructed_report
+                report=constructed_report(10 if args.budget is None else args.budget)
+            else:
+                from stars_rl.topology.trace import load_trace
+                from stars_rl.rl.sensitivity import measure_trace
+                report=measure_trace(load_trace(args.trace),total_budget_seconds=args.budget)
+            args.output.parent.mkdir(parents=True,exist_ok=True)
+            atomic_json(args.output,report)
+            print(json.dumps({'output':str(args.output.resolve()),'constructed_gate_passed':report.get('constructed_gate_passed'),
+                              'training_gate':report.get('training_gate','physical readiness remains OPEN')}))
+            return 0 if report.get('constructed_gate_passed',True) else 1
         if args.command == "doctor":
             from stars_rl.optimization.doctor import diagnose
             report = diagnose()

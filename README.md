@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Frozen circular-orbit generation and coverage/capacity audits are available; RL remains later work.
+The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Frozen circular-orbit generation, coverage/capacity audits, and an objective-weight control environment are available. Policy training remains later work.
 
 ## Requirements
 
@@ -625,9 +625,63 @@ imports and SCIP. A measured proportional forecast, 2 GiB ceiling and 250000-lin
 guard block unsupported growth. These measurements do not establish a speed
 advantage, dimension reduction, physical-scale solve or training readiness.
 
+## Objective-weight environment and action checks
+
+`StarsEnvironment` provides a plain Python `reset()` / `step(action)` API;
+Gymnasium is not required. Action IDs `0..4` select ratios `[0.25,0.5,1,2,4]`.
+Actions change Stage II objective weights only. The first window forces ratio
+`0.5` and reports `learning_eligible=False`. Every later successful step commits
+through the same independent validation and shared window budget as simulation.
+
+The pre-action observation is `(initial_flag, remaining_windows, demand_bin,
+host_pressure_bin, impending_loss_bin, previous_churn_bin)`. Demand excludes
+instance overhead; host pressure includes previous active-instance overhead and
+current minimum demand, without using optimized CPU allocations. Only current
+and next known geometry enter impending loss. This compact observation is
+partially observable. Unseen evaluation states choose action 1; Q ties within
+absolute `1e-12` prefer action 1, then the smallest ratio.
+
+Successful reward is minus actual normalized access, egress and assignment
+changes, independent of the chosen ratio. Failure terminates with
+`-4*sum(0.95**j for j in range(remaining_windows))`. Horizon completion also
+terminates (`truncated=False`); terminal observations are `None`. Infrastructure
+and numerical errors raise `TransitionError` without a learnable reward.
+
+```python
+from stars_rl.rl import StarsEnvironment
+from stars_rl.topology.trace import load_trace
+
+env = StarsEnvironment(load_trace("runs/toy-trace.json"))
+state, info = env.reset()
+while True:
+    state, reward, terminated, truncated, info = env.step(1)
+    if terminated:
+        break
+```
+
+```powershell
+stars-rl action-sensitivity --constructed --output runs/constructed-actions.json
+stars-rl action-sensitivity --trace runs/toy-trace.json --output runs/toy-actions.json
+```
+
+Output paths must be new. Sensitivity replays every ratio from identical
+committed state and records raw exports, independent checks, statuses and gaps.
+Meaningful decision classes ignore CPU ties and equivalent instance IDs.
+The constructed analytical topology certifies all access/host classes, realizes
+two different next-window regimes and an aliased observation, and enumerates all
+25 two-action sequences per regime. Low/high ratios have positive objective
+margins; ratio `0.5` is an explicit tie. The return margin is `1.9` at discount
+`0.95`. These are constructed solver results, with no learned policy involved.
+
+The original toy trace has one successful decision class per window across
+ratios. Development physical seed 0 fails initial necessary coverage checks.
+Representative useful action effects and feasible physical episodes remain an
+open training gate. No geometry, capacities or constraints were changed to
+manufacture a gain; the analytical fixture is separately labeled.
+
 ## Scientific scope
 
-The planned core uses SCIP through PySCIPOpt, retains continuous CPU allocation and hard feasibility constraints, and preserves temporal repair plus two-stage orchestration. The RL layer will select objective-weight ratios only after the fixed-weight optimizer has been independently validated. This project does not claim exact reproduction of unavailable author code or guaranteed RL superiority.
+The core uses SCIP through PySCIPOpt, retains continuous CPU allocation and hard feasibility constraints, and preserves temporal repair plus two-stage orchestration. The environment selects objective-weight ratios around the independently validated optimizer. This project does not claim exact reproduction of unavailable author code or guaranteed RL superiority.
 
 See [REFERENCES.md](REFERENCES.md) for the scientific reference and clean-room implementation note.
 

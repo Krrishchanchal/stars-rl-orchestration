@@ -70,7 +70,7 @@ class EpisodeResult:
 
 def simulate(trace: NetworkTrace, method_id='stars-fixed', *, rho=1,
              total_budget_seconds=None, radio_coefficients_by_window=None,
-             initial_export=None, services=None) -> EpisodeResult:
+             initial_export=None, services=None, _window_index=None, _previous=None) -> EpisodeResult:
     """Run one isolated method/episode; commit only checked on-time final choices.
 
     Common-initial-state studies accept a saved base full-model export for window0
@@ -87,9 +87,11 @@ def simulate(trace: NetworkTrace, method_id='stars-fixed', *, rho=1,
     runtime=RuntimeServices() if services is None else services
     episode=EpisodeResult(method_id,'native_initialization' if initial_export is None else 'common_initial_state',
                           total_budget_seconds,'standard' if services is None else 'injected_test_adapter')
-    records=[];committed=None;stopped=False
+    records=[];committed=_previous;stopped=False
     scenario=trace.scenario
     for w in trace.windows:
+        if _window_index is not None and w.window_index != _window_index:
+            continue
         record=WindowRecord(w.window_index,previous_committed=committed)
         records.append(record)
         if stopped:
@@ -202,3 +204,14 @@ def simulate(trace: NetworkTrace, method_id='stars-fixed', *, rho=1,
         record.timings['decision_wall_seconds']=record.elapsed_seconds
     episode.windows=tuple(records);episode.last_committed=committed
     return episode
+
+
+def advance_window(trace, window_index, previous=None, **kwargs):
+    """Execute exactly one existing solve/check/commit transaction, without replay."""
+    if type(window_index) is not int or not 0 <= window_index < len(trace.windows):
+        raise ValueError('invalid window index')
+    if (window_index == 0) != (previous is None):
+        raise ValueError('initial window requires no previous deployment; later windows require one')
+    if previous is not None and previous.window_index != window_index-1:
+        raise ValueError('previous deployment must be from immediately preceding window')
+    return simulate(trace, _window_index=window_index, _previous=previous, **kwargs)
