@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The project is being implemented incrementally. The current release provides the Python package, CLI, a verified SCIP backend capability check, validated schemas, direct numeric physics, immutable authored traces, and the discrete C1–C12 optimization layer. CPU/radio/delay constraints, the full STARS workflow, simulations, and RL functionality remain pending.
+The project is being implemented incrementally. The current release provides the Python package, CLI, a verified SCIP backend, validated schemas, numeric physics, authored traces, and the discrete model. A C07 draft now adds continuous CPU, radio and end-to-end delay constraints. Its acceptance awaits C08's independent validator. The STARS workflow, simulations and RL remain pending.
 
 ## Requirements
 
@@ -189,8 +189,8 @@ at least one eligible user-stage selects it; the activation upper bound counts
 eligible user-stage occurrences, including users sharing a slice.
 
 Reachable multi-hop hosts remain available regardless of direct user visibility.
-The binary domain retains compatible instances on zero-CPU hosts; resource
-constraints in the next milestone will reject their active use. Unreachable
+The binary domain retains compatible instances on zero-CPU hosts; the C07 draft's
+resource constraints reject their active use. Unreachable
 link products are omitted together with explicit endpoint prohibition rows,
 and every route-link class must sum to one. No nearest-host filtering is used.
 All constraints/variables have deterministic source-family/entity names.
@@ -199,8 +199,8 @@ Both builders currently use a constant feasibility objective. The association
 builder contains no placement/routing/CPU/radio/delay variables or constraints;
 Stage I objectives and orchestration are still pending. Discrete-model solutions
 do not certify CPU, radio throughput, delay or complete deployment feasibility.
-The later full model and independent validator are required for that approval.
-CPU allocation remains a continuous optimization decision for the next milestone.
+The resource/delay additions below and independent validator are required for that
+approval. CPU allocation is continuous in the C07 draft.
 
 From the repository root:
 
@@ -217,6 +217,55 @@ test objective, not a STARS objective. Exact fixture expectations and safe-domai
 arguments are in `tests/fixtures/discrete_oracles.json`. Raw values remain in the
 solver record; `decode_binary` rejects values outside the fixed integrality target
 and does not substitute for constraint validation.
+
+## C07 draft: CPU, radio and end-to-end delay
+
+`build_full_model(scenario, window)` extends the discrete model with C13–C16,
+CPU gating, activation overhead, instance limits, occupancy-dependent radio and
+the documented user-level throughput constraint. CPU remains a continuous
+optimization decision. A tight-delay test requires 60 MIPS while throughput alone
+requires 20; no minimum-CPU allocation shortcut is used.
+
+Processing uses dimensionless variables `g=G/L`, `qhat=q/L` and `tau=t/(A/L)`.
+The reciprocal equality is `tau*qhat=beta`, with `qhat=g+1-beta` and the conditional
+bound `qhat <= (capacity/L)*beta +1-beta`. Its global upper bound is
+`max(capacity/L,1)`, preserving inactive undersized and zero-capacity hosts.
+The export restores CPU/q in MIPS and processing time in seconds for every
+selected and unselected candidate.
+
+Radio occupancy uses binary one-hot counts including zero and AND products for
+each visible user/satellite/positive-occupancy combination. Service is summed
+over the selected satellite once per user. Bandwidth/noise/rates come from the
+physical radio inputs. Explicit authored coefficient tables are permitted only
+for labeled analytical fixtures, whose original trusted tables must also be
+available to the future independent validator.
+
+All five propagation classes, every candidate processing term and access
+serialization enter C16. The builders retain a constant feasibility objective;
+STARS method objectives and two-stage orchestration remain later work. No extra
+ISL traffic constraints, scheduling policy or secondary CPU objective is added.
+
+```powershell
+.\.venv\Scripts\python.exe -c "from stars_rl.config import load_scenario; from stars_rl.topology.trace import build_trace; from stars_rl.optimization.monolithic import build_full_model; t = build_trace(load_scenario('configs/toy.yaml')); m, v = build_full_model(t.scenario, t.windows[0]); print(m.getNVars(), m.getNConss())"
+.\.venv\Scripts\python.exe -m pytest tests/solver/test_cpu.py tests/solver/test_nonlinear_delay.py tests/solver/test_radio_occupancy.py -m solver -q
+```
+
+The first command prints `185 350` for toy window 0. Diagnostics provide build
+time, generated counts, finite bounds, coefficient ranges and original-unit
+scaling metadata before solving. More than 250000 estimated link variables is
+blocked by default; larger builds require explicit opt-in plus a measured memory
+forecast within the initial 2 GiB budget.
+
+`export_solution(model, scenario, window, variables, result)` preserves the raw
+solver result, decoded choices, all candidate reciprocal/CPU values, activations,
+occupancies, rates and encoded delay components. No-incumbent outcomes retain
+their status and have no candidate. Exported reports say `validation: not_run`.
+An optimal solver status or a C04-helper consistency comparison does not approve
+a deployment. C07 and C08 are accepted jointly; full raw/decoded residual checks
+and corruption tests remain pending. No Stage I/II, simulation or RL acceptance
+claim follows from the draft.
+
+Analytical expectations and limits are in `tests/fixtures/resource_oracles.json`.
 
 ## Scientific scope
 

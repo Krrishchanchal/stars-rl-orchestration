@@ -1,5 +1,6 @@
 """Hand-authored C06 fixtures; no sampling, placement heuristic or solver oracle."""
 import pytest
+from dataclasses import replace
 from pyscipopt import quicksum
 
 from stars_rl.models import (
@@ -36,8 +37,8 @@ def scenario_factory():
 
 @pytest.fixture
 def solve_case():
-    def run(model):
-        return solve(model,stage="c06_discrete",objective_name="feasibility",objective_units="constant",time_limit=2)
+    def run(model, *, objective_name="feasibility", objective_units="constant"):
+        return solve(model,stage="solver_fixture",objective_name=objective_name,objective_units=objective_units,time_limit=2)
     return run
 
 
@@ -48,3 +49,23 @@ def fix_choice():
         # never add a forbidden-domain variable to the production model.
         model.addCons(quicksum([registry.get(key,0)])==value)
     return fix
+
+
+@pytest.fixture
+def full_case(scenario_factory):
+    """Explicit C07 analytical inputs with authored positive radio coefficients."""
+    def make(*, capacities=None, overhead=0, demand=2, psi=10, omega=10,
+             delay=.05, instance_limit=None, coefficient=12e6, **kwargs):
+        s,w=scenario_factory(**kwargs)
+        capacities=capacities or {n.id:100 for n in s.satellites}
+        s=replace(s,scenario_id="c07-fixture",family_id="c07-fixtures-v1",
+            function_types=tuple(replace(f,psi_instructions_per_bit=psi,omega_instructions_per_bit=omega,
+                                         base_overhead_mips=overhead) for f in s.function_types),
+            slices=tuple(replace(sl,demand_mbps=demand,delay_limit_seconds=delay) for sl in s.slices),
+            satellites=tuple(replace(n,cpu_capacity_mips=capacities[n.id],
+                max_active_instances=n.max_active_instances if instance_limit is None else instance_limit) for n in s.satellites))
+        t=build_trace(s);s,w=t.scenario,t.windows[0]
+        rates={(u,n.id,k):coefficient for u in w.user_ids for n in s.satellites
+               if w.access_distance(u,n.id) is not None for k in range(1,n.access_capacity+1)}
+        return s,w,rates
+    return make

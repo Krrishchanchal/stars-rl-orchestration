@@ -1,0 +1,16 @@
+{
+  "milestone": "C07 draft; accepted jointly with C08 only",
+  "independence": "Literal analytical expectations; no production helper generated the expected values. Full independent deployment validation and residual-family mutation checks remain C08.",
+  "cpu_minimum": {"demand_mbps":2,"psi":10,"minimum_mips":20,"note":"Continuous allocation is optimized, not fixed to this lower bound."},
+  "qbound": {"required_mips":1500,"amplitude":0.9,"host_capacities_mips":[[0,2000],[1000,2000]],"overhead_mips":0,"expected":"Host b can be active while host a has b=0,G=0,q=1500,qhat=1,tau=0. Forced active use of host a is infeasible."},
+  "shared_overhead": {"users":2,"stages_per_user":1,"demand_mbps_each":2,"psi":10,"overhead_mips":5,"shared_instance_required_total_mips":45,"two_instances_required_total_mips":50,"derivation":"Each user consumes20 MIPS; overhead charged once per activated instance."},
+  "alloc2": [{"L":[1,1],"A":[1,4],"capacity_mips":9,"expected_cpu_mips":[3,6],"expected_delay":1,"derivation":"Cauchy-Schwarz: G proportional to sqrt(A). Algebraic backend inputs, not physical samples."},{"L":[4,1],"A":[1,4],"capacity_mips":9,"expected_cpu_mips":[4,5],"expected_delay":1.05,"derivation":"First lower bound binds; 1/4+4/5=1.05."}],
+  "tight_delay": {"packet_bits":12000,"psi":10,"omega":10,"demand_mbps":2,"access_and_ground_total_m":1000000,"rate_bps":12000000,"budget_seconds_formula":"1000000/299792458 +0.001+0.002","expected_minimum_cpu_mips":60,"derivation":"A=0.12; residual processing budget0.002; G>=0.12/0.002=60 > L20."},
+  "radio_select": {"candidate_satellites":["a","b"],"demand_bps":2000000,"positive_fixture_rates_bps":12000000,"both_insufficient_rates_bps":1000000,"expected":"Either selected satellite is feasible at12Mbps without service obligation at the unselected satellite; both1Mbps is infeasible."},
+  "occupancy": {"users":2,"single_host":"a","rates_bps_by_occupancy":{"1":12000000,"2":6000000},"expected_serialization_seconds_per_user":0.002,"expected_selected_occupancy":2,"zero_occupancy_for_assigned_users":"infeasible"},
+  "psi_omega": {"demand_mbps":2,"psi":10,"omega":20,"packet_bits":12000,"cpu_mips":20,"minimum_cpu_mips":20,"amplitude":0.24,"processing_seconds":0.012},
+  "processing_sweep": {"demand_mbps":[2,20],"psi":[5,90],"omega":[5,90],"packet_bits":[512,12000],"capacity_mips":[0,10,1800,2000],"stage_count":[1,4],"cases":128,"inactive_candidates_per_stage":4,"dimensionless_raw_target":1e-8,"all_candidate_processing_error_budget_seconds":5e-8},
+  "consistency_only": "The toy export is compared with C04 numerical routines, supplemented with literal analytical fixtures. This is not C08 independent full-model validation. Original-unit row thresholds, aggregate inactive-error counterexamples and all raw/decoded adversarial families must still pass there.",
+  "first_size_ladder_pair":[2,1],
+  "source_coefficients": "Authored radio coefficients require analytical_fixture classification and a complete positive domain. They are copied as explicit inputs. C08 must take the original trusted coefficient fixture separately, not trust rates written in the candidate export. Production toy uses the physical radio equations."
+}

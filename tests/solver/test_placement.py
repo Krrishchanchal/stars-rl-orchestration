@@ -95,7 +95,7 @@ def test_joint_discrete_objective_against_enumerated_classes(scenario_factory,so
     objective+=quicksum(costs[3][n]*x for (u,n,g),x in v.xi.items())
     objective+=quicksum(costs[k+1][n]*x for (u,k,f,i,n),x in v.beta.items())
     m.setObjective(objective)
-    result=solve_case(m)
+    result=solve_case(m,objective_name="fixture_linear_cost",objective_units="cost")
     assert result.objective==oracle
     assert result.absolute_gap==0
     chosen=(next(n for (u,n),x in v.alpha.items() if result.values[x.name]==1),
