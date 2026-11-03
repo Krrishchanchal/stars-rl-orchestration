@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The project is being implemented incrementally. The current release provides the Python package and command-line scaffold; the optimization model, simulations, and RL functionality are not implemented yet.
+The project is being implemented incrementally. The current release provides the Python package, CLI, and a verified SCIP backend capability check. The STARS network model, simulations, and RL functionality are not implemented yet.
 
 ## Requirements
 
@@ -39,9 +39,22 @@ python3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m stars_rl.cli --help
 .\.venv\Scripts\python.exe -m stars_rl.cli --version
 .\.venv\Scripts\python.exe -m pytest tests/unit/test_cli.py
+.\.venv\Scripts\python.exe -m stars_rl.cli doctor --solver
+.\.venv\Scripts\python.exe -m pytest
 ```
 
 Invalid CLI options return a nonzero exit status. There are no runnable optimization, simulation, or training commands yet.
+
+The doctor prints JSON containing analytical assignment and nonlinear reciprocal checks,
+raw statuses, stage-local bounds/gaps, versions and warm-start diagnostics. Its exit status
+is nonzero on a failed check. It is a backend smoke check, not a validated STARS deployment.
+Solver tests additionally cover inactive undersized/zero-capacity hosts, algebraic CPU
+allocation, physical scaling extremes and original-unit residual calibration. The full
+independent deployment validator is still pending. No solver test is silently skipped.
+
+Verified on Windows with CPython 3.11.4, PySCIPOpt 6.3.0 and bundled SCIP 10.0.2.
+The pinned Windows wheel installs without a separate SCIP installation or solver license.
+Linux CI is configured; its remote execution has not been verified here.
 
 ## Scientific scope
 
