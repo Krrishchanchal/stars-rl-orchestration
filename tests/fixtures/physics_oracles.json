@@ -1,0 +1,12 @@
+{
+  "milestone": "C04",
+  "source": "Approved model units/radio/delay sections and oracle catalog",
+  "independence": "Tests use literal hand-derived values and the Decimal reference below; no production helper generated these expectations.",
+  "fixtures": [
+    {"id": "O-UNITS", "test_file": "tests/unit/test_units.py", "derivation": "dBm: 10^((x-30)/10); dBi: 10^(x/10); milliseconds and kilometres: powers of 1000; Mbps/MIPS: powers of 1000000"},
+    {"id": "O-PACKET", "test_file": "tests/unit/test_delay.py", "inputs": {"demand_bps": 2000000, "window_seconds": 60, "packet_bits": 12000, "rate_bps": 20000000}, "expected": {"window_bits": 120000000, "window_serialization_seconds": 6, "packet_serialization_seconds": 0.0006}},
+    {"id": "O-COEFF", "test_file": "tests/unit/test_delay.py", "inputs": {"demand_mbps": 2, "psi_instructions_per_bit": 10, "omega_instructions_per_bit": 20, "packet_bits": 12000, "cpu_mips": 20}, "expected": {"minimum_cpu_mips": 20, "processing_seconds": 0.012}},
+    {"id": "F-FIVESEGMENT", "test_file": "tests/unit/test_delay.py", "inputs": {"distances_m": [300000, 600000, [900000, 1200000], 1500000, 1800000], "speed_of_light_mps": 300000000, "packet_bits": 12000, "omega": [10, 20, 10], "cpu_mips": [100, 100, 200], "rate_bps": 20000000}, "expected": {"propagation_seconds": 0.021, "processing_seconds": 0.0042, "serialization_seconds": 0.0006, "total_seconds": 0.0258}},
+    {"id": "F-RADIO-DECIMAL", "test_file": "tests/unit/test_radio.py", "derivation": "stdlib Decimal precision=60; pi=3.14159265358979323846264338327950288419716939937510582097494459; P=0.1*10^5.5*(299792458/(14e9*4*pi*500000))^2; B=100e6/n; N=1.380649e-23*290*B; rate=B*ln(1+P/N)/ln(2)", "expected": {"power_watts": "3.67303949149288829277535867231618720982337601015644361643800e-13", "rate_bps_by_occupancy": {"1": "93912842.0564435087675168304269113795425252992158250192860950", "2": "75160797.6536086441637736427827975169560079728029272228865953", "3": "63590053.2114512176543530282678241779468784980694282714739840", "4": "55581533.3313510902192494608181941388311781060679431812269847"}}}
+  ]
+}

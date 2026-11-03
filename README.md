@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The project is being implemented incrementally. The current release provides the Python package, CLI, a verified SCIP backend capability check, and validated scenario/deployment schemas with an explicit toy configuration. The STARS network model, simulations, and RL functionality are not implemented yet.
+The project is being implemented incrementally. The current release provides the Python package, CLI, a verified SCIP backend capability check, validated scenario/deployment schemas with an explicit toy configuration, and direct numeric physics calculations. The STARS network model, simulations, and RL functionality are not implemented yet.
 
 ## Requirements
 
@@ -89,6 +89,41 @@ provide round-trips. Deployment/outcome serializers and
 They do not certify CPU, radio, routing, visibility or delay feasibility; that needs
 the later independent deployment validator. A candidate outcome is not a deployment
 approval. Toy trace/path construction remains a later milestone.
+
+## Numeric physics
+
+`stars_rl.physics` provides explicit SI conversions, free-space received power,
+thermal noise, SINR, equal-bandwidth Shannon rate and per-packet delay calculations.
+Radio inputs come from the validated `Radio` record. Both shared bandwidth and
+thermal noise are recomputed for each positive occupancy. `access_rate_table`
+returns immutable link-budget records indexed by occupancy, with `None` at zero
+occupancy because there is no active user rate there.
+
+`end_to_end_delay` returns all five propagation classes: user-to-access,
+access-to-first-host, consecutive host paths, last-host-to-egress and egress-to-GS.
+It also retains each stage's processing delay and access serialization. Callers
+must supply resolved path distances; path construction and reachability checks
+are not implemented yet. Zero path distance represents colocation; unavailable
+paths (`None` or infinity) are rejected.
+
+Latency uses one representative packet unchanged along the chain, not all traffic
+generated in a window. Throughput CPU uses psi; packet processing uses omega.
+The toy sets them equal as an explicit assumption, while the functions keep them
+distinct. CPU remains an input to the direct calculation and a continuous decision
+for the later optimizer; the throughput lower bound does not fix its allocation.
+
+From the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -c "from stars_rl.physics.delay import processing_seconds; print(processing_seconds(12000, 10, 100))"
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_units.py tests/unit/test_radio.py tests/unit/test_delay.py -q
+```
+
+The first command prints `0.0012` seconds. Tests use hand-derived examples and
+an independent high-precision radio reference, documented in
+`tests/fixtures/physics_oracles.json`. Comparing a solver export with these same
+production helpers would provide consistency evidence only; it would not replace
+the independent deployment validator planned for a later milestone.
 
 ## Scientific scope
 
