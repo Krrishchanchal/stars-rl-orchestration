@@ -20,17 +20,17 @@ def add_absolute_deviation(model, variable, reference, *, variable_name):
     return d
 
 
-def association_deviations(model, scenario, window, association, reference):
+def association_deviations(model, scenario, window, association, reference, *, prefixes=("d_alpha", "d_xi")):
     old_a = {(a.user_id, a.satellite_id) for a in reference.access}
     old_x = {(e.user_id, e.satellite_id, e.ground_station_id) for e in reference.egress}
     da, dx = {}, {}
     for u in window.user_ids:
         for s in window.satellite_ids:
             key = (u, s)
-            da[key] = add_absolute_deviation(model, association.alpha.get(key, 0), int(key in old_a), variable_name=name("d_alpha", *key))
+            da[key] = add_absolute_deviation(model, association.alpha.get(key, 0), int(key in old_a), variable_name=name(prefixes[0], *key))
             for g in window.ground_station_ids:
                 key = (u, s, g)
-                dx[key] = add_absolute_deviation(model, association.xi.get(key, 0), int(key in old_x), variable_name=name("d_xi", *key))
+                dx[key] = add_absolute_deviation(model, association.xi.get(key, 0), int(key in old_x), variable_name=name(prefixes[1], *key))
     return da, dx
 
 

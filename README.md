@@ -376,6 +376,49 @@ Explicit `objective_mode="propagation"` supports later hierarchy-only windows;
 these use no prior temporal state/start when called with `previous=None`.
 No secondary tie-breaking objective is added. C11 Stage II is still pending.
 
+## Stage II full deployment optimization
+
+`build_stage2_model` extends the common full feasible set with the objective
+`w_H*H + w_beta*D_beta`. Access and gateway binaries remain free: Stage I is a
+soft preference, so Stage II can correct associations that fail radio, CPU,
+route or delay requirements. `H` divides combined access/gateway one-hot L1 by
+`4*users`; placement L1 uses `2*user_stages` against the original committed
+deployment. Initial setup has `D_beta=0`. No secondary CPU objective is added.
+
+```python
+from stars_rl.optimization.stage2 import run_stage2
+
+second = run_stage2(scenario, window, outcome, previous,
+                    started_at=started_at, total_budget_seconds=10,
+                    weights=(1, 0.5))
+if second.status == "validated":
+    candidate = second.final_deployment
+```
+
+Pass the same start time and budget used by Stage I. Stage II solves until 95%
+of that shared budget and checks the result until 100%; elapsed Stage I work is
+not reset. Late output retains diagnostics but has no final deployment. A valid
+nonoptimal incumbent may be accepted with its own status/bounds/gaps. Missing
+Stage I reference means Stage II is not attempted.
+
+Default starts are true partial solutions: current Stage I association binaries
+and compatible prior placements, with resource/routing/occupancy/deviation
+auxiliaries unknown. Explicit complete starts require every variable and are
+checked before submission; known-invalid complete starts are withheld. Neither
+start policy changes the feasible set or fixes Stage I decisions.
+
+`validate_stage2` independently checks C21–C26, recomputes actual `H`/`D_beta`
+and the encoded objective, and invokes the independent full-deployment validator
+on the base decisions. The original export retains all raw auxiliaries and final
+associations/resources. Actual model counts include added deviation variables;
+no dimension reduction or warm-start speed advantage is claimed.
+Accumulated auxiliary errors cannot underreport the actual discrete objective
+by more than the fixed `1e-8` objective target. Positive epigraph slack in a
+nonoptimal result is retained separately from actual change metrics.
+
+The result is a validated deployment candidate. Cross-window commit/state
+orchestration is the next milestone, C12, and is not implemented yet.
+
 ## Scientific scope
 
 The planned core uses SCIP through PySCIPOpt, retains continuous CPU allocation and hard feasibility constraints, and preserves temporal repair plus two-stage orchestration. The RL layer will select objective-weight ratios only after the fixed-weight optimizer has been independently validated. This project does not claim exact reproduction of unavailable author code or guaranteed RL superiority.

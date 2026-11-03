@@ -1,0 +1,16 @@
+{
+  "provenance": "Hand-derived Stage II expectations, not solver measurements",
+  "hierarchy": "(L1(alpha,alpha_star)+L1(xi,xi_star))/(4*users)",
+  "placement": "L1(beta,beta_previous)/(2*user_stages); zero before first placement",
+  "rescue": {"bad_reference_access": "a", "feasible_access": "b", "minimum_H": 0.5},
+  "tradeoff": {
+    "description": "Disconnected hosts force access/host/egress colocation. Previous host a, reference access/egress b.",
+    "host_a": {"H": 1, "D_beta": 0},
+    "host_b": {"H": 0, "D_beta": 1},
+    "rho_0.5": {"best_host": "b", "objective": 0.5},
+    "rho_2": {"best_host": "a", "objective": 1}
+  },
+  "first_window_D_beta": 0,
+  "solve_cutoff_fraction": 0.95,
+  "validation_cutoff_fraction": 1
+}
