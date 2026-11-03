@@ -68,14 +68,14 @@ def _check_boundary(folder,manifest,trace):
     if state!=expected:raise ValueError('incompatible initial boundary state')
 
 
-def run_experiment(trace_path,output_root,run_id,method_id='stars-fixed',*,rho=1,total_budget_seconds=10,
+def run_experiment(trace_path,output_root,run_id,method_id='stars-fixed',*,rho=1,total_budget_seconds=None,
                    seed=0,resume=False,initial_export_path=None,radio_coefficients_path=None,
                    _fault=None,_simulate_fn=None):
     folder=run_directory(output_root,run_id,method_id)
     if not resume and trace_path is None:raise ValueError('new run requires --trace')
     if type(seed) is not int or seed!=0:raise ValueError('fixed-method solver seed is frozen at 0')
     if type(rho) not in (int,float) or rho not in (.25,.5,1,2,4):raise ValueError('invalid fixed ratio')
-    if type(total_budget_seconds) not in (int,float) or not math.isfinite(total_budget_seconds) or total_budget_seconds<=0:raise ValueError('invalid window budget')
+    if total_budget_seconds is not None and (type(total_budget_seconds) not in (int,float) or not math.isfinite(total_budget_seconds) or total_budget_seconds<=0):raise ValueError('invalid window budget')
     if not resume:folder.mkdir(parents=True,exist_ok=False)
     elif not folder.is_dir():raise ValueError('no existing run to resume')
     with run_lock(folder):
@@ -84,6 +84,8 @@ def run_experiment(trace_path,output_root,run_id,method_id='stars-fixed',*,rho=1
         trace_start=time.perf_counter()
         trace=load_trace(trace_path if trace_path is not None else folder/'trace.json')
         trace_load_seconds=time.perf_counter()-trace_start
+        if total_budget_seconds is None:
+            total_budget_seconds=read_json(folder/'settings.json')['window_budget_seconds'] if resume else (60 if trace.scenario.orbit is not None else 10)
         generation_path=(Path(trace_path).with_name(Path(trace_path).name+'.generation.json') if trace_path is not None else folder/'generation.json')
         generation=read_json(generation_path) if generation_path.exists() else None
         if generation is not None:

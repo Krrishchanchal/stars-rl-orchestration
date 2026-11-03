@@ -94,10 +94,16 @@ def _context(s,w):
     if not 0<=w.window_index<s.window_count or w.start_seconds!=w.window_index*s.window_seconds or w.duration_seconds!=s.window_seconds:
         raise InputError("scenario/window time domains differ")
     access={(l.user_id,l.satellite_id):l.distance_m for l in s.access_schedule[w.window_index].links}
-    ground={(l.satellite_id,l.ground_station_id):l.distance_m for l in s.ground_links}
+    geometry_roundoff=0
+    if s.orbit is not None:
+        from .physical import verify_window
+        try:geometry_roundoff=verify_window(s,w)
+        except ValueError as exc:raise InputError(str(exc)) from exc
+        ground={(n,g):w.ground_distances_m[i][j] for i,n in enumerate(sats) for j,g in enumerate(gs) if w.ground_distances_m[i][j] is not None}
+    else:ground={(l.satellite_id,l.ground_station_id):l.distance_m for l in s.ground_links}
     if w.access_distances_m!=tuple(tuple(access.get((u,n)) for n in sats) for u in users):raise InputError("access trace differs from source")
     if w.ground_distances_m!=tuple(tuple(ground.get((n,g)) for g in gs) for n in sats):raise InputError("ground trace differs from source")
-    edges={tuple(sorted((e.satellite_a_id,e.satellite_b_id))):e.distance_m for e in s.isl_links}
+    edges={tuple(sorted((e.satellite_a_id,e.satellite_b_id))):e.distance_m for e in (w.isl_links if s.orbit is not None else s.isl_links)}
     if edges!={tuple(sorted((e.satellite_a_id,e.satellite_b_id))):e.distance_m for e in w.isl_links}:raise InputError("ISL trace differs from source")
     # Independent Floyd-Warshall, not the C05 Dijkstra/path cache.
     d={(a,b):(0.0 if a==b else edges.get(tuple(sorted((a,b))),math.inf)) for a in sats for b in sats}
@@ -114,7 +120,7 @@ def _context(s,w):
             pairs=list(zip(path.nodes,path.nodes[1:]))
             if path.nodes[0]!=a or path.nodes[-1]!=b or any(tuple(sorted(pair)) not in edges for pair in pairs):raise InputError("cached path uses nonexistent endpoints/edges")
             length=math.fsum(edges[tuple(sorted(pair))] for pair in pairs)
-            rounding=max(1,len(sats))*math.ulp(max(abs(expected),abs(length),abs(path.distance_m),1e-300))
+            rounding=max(1,len(sats))*(geometry_roundoff+math.ulp(max(abs(expected),abs(length),abs(path.distance_m),1e-300)))
             if abs(length-expected)>rounding or abs(path.distance_m-length)>rounding:raise InputError("cached path cost is not the source shortest distance")
     return users,sats,gs,access,ground,d
 

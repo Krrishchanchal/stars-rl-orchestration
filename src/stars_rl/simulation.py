@@ -52,6 +52,7 @@ class WindowRecord:
     elapsed_seconds: float=0
     error: dict | None=None
     timings: dict=field(default_factory=dict)
+    preflight: dict=field(default_factory=dict)
 
 
 @dataclass
@@ -68,7 +69,7 @@ class EpisodeResult:
 
 
 def simulate(trace: NetworkTrace, method_id='stars-fixed', *, rho=1,
-             total_budget_seconds=10, radio_coefficients_by_window=None,
+             total_budget_seconds=None, radio_coefficients_by_window=None,
              initial_export=None, services=None) -> EpisodeResult:
     """Run one isolated method/episode; commit only checked on-time final choices.
 
@@ -79,6 +80,7 @@ def simulate(trace: NetworkTrace, method_id='stars-fixed', *, rho=1,
     """
     if not isinstance(trace,NetworkTrace):raise ValueError('validated NetworkTrace required')
     spec=method_spec(method_id)
+    if total_budget_seconds is None:total_budget_seconds=60 if trace.scenario.orbit is not None else 10
     if type(total_budget_seconds) not in (int,float) or not math.isfinite(total_budget_seconds) or total_budget_seconds<=0:
         raise ValueError('positive finite window budget required')
     if type(rho) not in (int,float) or rho not in (.25,.5,1,2,4):raise ValueError('rho must belong to the frozen ratio grid')
@@ -98,7 +100,12 @@ def simulate(trace: NetworkTrace, method_id='stars-fixed', *, rho=1,
         try:
             rates=None if radio_coefficients_by_window is None else radio_coefficients_by_window[w.window_index]
             candidate=None
-            if w.window_index==0 and initial_export is not None:
+            if scenario.orbit is not None:
+                from .topology.audit import preflight
+                active='preflight';record.preflight=preflight(scenario,w)
+            if record.preflight and not record.preflight['passed']:
+                record.status='failed';record.reason='preflight_infeasible';record.failure_stage='preflight'
+            elif w.window_index==0 and initial_export is not None:
                 record.export=deepcopy(initial_export)
                 if runtime.clock()>=deadline:
                     record.status='late';record.reason='deadline_before_initial_validation'

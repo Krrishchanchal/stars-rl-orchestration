@@ -326,6 +326,29 @@ FAMILIES = {"toy-v1":"authored_toy", "paper-inputs-v1":"reference_audit",
 
 
 @dataclass(frozen=True, slots=True)
+class PhysicalOrbit(Record):
+    """Frozen D09 v1 inputs; changing geometry requires a new approved family."""
+    earth_radius_m: float = 6371000.0
+    gravitational_parameter_m3_s2: float = 3.986004418e14
+    rotation_rad_s: float = 7.2921150e-5
+    altitude_m: float = 500000.0
+    inclination_degrees: float = 88.0
+    planes: int = 4
+    satellites_per_plane: int = 15
+    phasing_factor: int = 1
+    raan_degrees: tuple[float, ...] = (0.0,45.0,90.0,135.0)
+    elevation_mask_degrees: float = 10.0
+    epoch_utc: str = '2026-01-01T00:00:00Z'
+    greenwich_angle_at_epoch_rad: float = 0.0
+    angular_roundoff_radians: float = 1e-12
+
+    def __post_init__(self):
+        _fields(self)
+        if any(getattr(self,f.name)!=f.default for f in fields(self)):
+            raise ValueError('physical v1 constants are frozen; a changed geometry requires a new approved family')
+
+
+@dataclass(frozen=True, slots=True)
 class Scenario(Record):
     schema_version: Literal[1]
     scenario_id: str
@@ -344,6 +367,7 @@ class Scenario(Record):
     access_schedule: tuple[AccessWindow, ...]
     ground_links: tuple[GroundLink, ...]
     isl_links: tuple[ISLLink, ...]
+    orbit: PhysicalOrbit | None = None
 
     def __post_init__(self):
         _fields(self)
@@ -354,6 +378,32 @@ class Scenario(Record):
                 raise ValueError("family_classification conflicts with approved family")
         elif self.family_classification != "analytical_fixture":
             raise ValueError("unknown physical/toy family; versioned approval required")
+        if self.orbit is not None:
+            if (self.family_id not in ('paper-inputs-v1','development-physical-v1')
+                    or len(self.satellites)!=60 or self.window_count!=14 or self.window_seconds!=60
+                    or self.metadata.epoch_utc!=self.orbit.epoch_utc or self.metadata.interval_start_seconds!=0
+                    or self.metadata.generation.method!='sampled' or self.ground_links or self.isl_links
+                    or any(u.coordinates is None for u in self.users) or any(g.coordinates is None for g in self.ground_stations)):
+                raise ValueError('physical source requires approved sampled v1 geometry; ground/ISLs are derived per window')
+            populations=(30,6,5) if self.family_id=='paper-inputs-v1' else (4,2,2)
+            if (len(self.users)!=populations[0] or len(self.slices)!=populations[1] or len(self.function_types)!=8
+                    or any(sum(u.slice_id==sl.id for u in self.users)!=populations[2] for sl in self.slices)
+                    or any((n.access_capacity,n.egress_capacity,n.max_active_instances)!=(5,5,8) or n.cpu_capacity_mips<1000 for n in self.satellites)
+                    or any(f.psi_instructions_per_bit!=f.omega_instructions_per_bit or not 1<=f.base_overhead_mips<=17 for f in self.function_types)
+                    or any(not 2<=len(sl.chain)<=4 or sl.packet_bits!=12000 or not .035<=sl.delay_limit_seconds<=.150 for sl in self.slices)
+                    or self.radio!=Radio(14e9,.1,15,40,100e6,290,'exogenous',0,299792458,1.380649e-23)
+                    or {g.id:(g.coordinates.latitude_degrees,g.coordinates.longitude_degrees) for g in self.ground_stations}!={'g0':(49.93,-79.53),'g1':(49.93,-69.53)}
+                    or any(not 49<=u.coordinates.latitude_degrees<=51 or not -80<=u.coordinates.longitude_degrees<=-69 for u in self.users)):
+                raise ValueError('physical family population, ranges or capacity assumptions differ from frozen v1')
+            expected_instances={(f.id,i,n.id) for f in self.function_types for n in self.satellites for i in ('i0','i1')}
+            if {i.identity for i in self.instances}!=expected_instances:raise ValueError('physical v1 needs two stable instances per type/host')
+            for index,u in enumerate(self.users):
+                lat,lon=math.radians(u.coordinates.latitude_degrees),math.radians(u.coordinates.longitude_degrees)
+                for other in self.users[:index]:
+                    a,b=math.radians(other.coordinates.latitude_degrees),math.radians(other.coordinates.longitude_degrees)
+                    hav=math.sin((lat-a)/2)**2+math.cos(lat)*math.cos(a)*math.sin((lon-b)/2)**2
+                    if 2*math.asin(math.sqrt(max(0,min(1,hav))))+self.orbit.angular_roundoff_radians<math.radians(.5):
+                        raise ValueError('physical layout violates .5 degree user separation')
         for name in ("function_types", "slices", "users", "ground_stations", "satellites"):
             values = getattr(self, name)
             if not values:

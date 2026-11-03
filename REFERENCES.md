@@ -6,3 +6,9 @@ M. Mahyoub, W. Jaafar, S. Muhaidat, and H. Yanikomeroglu, “STARS: Stability-Aw
 
 The implementation is being developed independently. No source code from the authors’ [reference repository](https://github.com/EngMohammedMahyoub/STARS) has been copied into this project.
 
+## Circular two-body geometry reference
+
+[NASA NTRS, Orbit Relations](https://ntrs.nasa.gov/api/citations/19740017557/downloads/19740017557.pdf)
+supports the circular orbit-period relation. Earth/orbit/epoch/visibility constants
+remain the project's explicitly selected synthetic conventions, not fitted
+ephemerides or recovered author traces.

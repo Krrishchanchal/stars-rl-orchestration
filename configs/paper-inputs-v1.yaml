@@ -1,0 +1,4 @@
+# Frozen 4x15,500km,88deg geometry. 30-user reference/infeasibility audit only.
+physical_schema_version: 1
+family_id: paper-inputs-v1
+root_seed: 0

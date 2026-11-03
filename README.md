@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Physical trace generation and RL remain later milestones.
+The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Frozen circular-orbit generation and coverage/capacity audits are available; RL remains later work.
 
 ## Requirements
 
@@ -168,9 +168,10 @@ and different input insertion orders normalize identically. Stable entity IDs
 remain semantic keys. The frozen toy content hash is recorded with independent
 fixture derivations in `tests/fixtures/topology_oracles.json`.
 
-This trace builder supports authored toy/analytical inputs. Physical trace generation,
-and matching audits remain later milestones. Full optimization and episode simulation
-are implemented for authored inputs.
+Authored toy/analytical traces retain their original format and hashes. Physical
+traces add frozen orbit metadata and derive access, ground-station, ISL and path
+data separately for every window. Episode simulation audits physical snapshots
+before expensive model construction.
 
 ## Discrete optimization layer
 
@@ -483,8 +484,9 @@ From the repository root, using the Python environment where this package is ins
 .\.venv-c03\Scripts\python.exe -m stars_rl.cli validate --run-dir runs/demo-c13/stars-fixed
 ```
 
-`generate` materializes **authored** scenarios and records offline preparation
-cost in a sidecar. Orbital generation/audits remain C14. `validate --trace PATH`
+`generate --scenario` materializes authored scenarios; `--physical-config` creates
+the frozen physical families below. Offline preparation cost is recorded in a
+sidecar. `validate --trace PATH`
 checks cached paths and hashes against the original scenario. The normalized
 trace-content hash excludes arbitrary provenance labels; its separate artifact
 hash retains the exact trace identity and group/lineage metadata.
@@ -494,7 +496,8 @@ methods can share a run ID and the same saved trace for paired comparisons;
 an existing method run cannot be overwritten. `--config FILE` reads JSON/YAML
 keys `method_id`, `rho`, `window_budget_seconds`, `solver_seed`; explicit CLI flags
 override them. `configs/fixed_experiment.yaml` is a ready-to-run example.
-Solver seed 0 and one thread remain frozen. `--initial-export` selects
+Solver seed 0 and one thread remain frozen. Default budgets are 10s for authored
+traces and 60s for physical traces; explicit settings override them. `--initial-export` selects
 the separately labeled common-initial-state study. Analytical fixture coefficients
 use `--radio-coefficients FILE`, a list of original records with `window_index`,
 `user_id`, `satellite_id`, `occupancy`, `rate_bps`; empty visibility windows retain
@@ -543,6 +546,84 @@ CLI exit codes are 0 for a successful simulation or valid usable artifacts,
 or incompatible recovery.
 Known network failure artifacts can still pass artifact validation. `runs/` is
 ignored by Git; keep generated results and any private inputs out of public commits.
+
+## Physical generation, audits and initial scaling
+
+```powershell
+.\.venv-c03\Scripts\python.exe -m stars_rl.cli generate --physical-config configs/development-physical-v1.yaml --output runs/development-trace.json
+.\.venv-c03\Scripts\python.exe -m stars_rl.cli audit --trace runs/development-trace.json --output runs/development-audit.json
+.\.venv-c03\Scripts\python.exe -m stars_rl.cli benchmark --output runs/size-ladder
+```
+
+`configs/paper-inputs-v1.yaml` selects the separate 30-user reference audit.
+The development family has 4 users in 2 slices; the reference has 30 in 6 slices.
+Both use the same frozen spherical two-body conventions:
+
+| Input | Frozen value |
+|---|---|
+| Earth radius / altitude | 6371000 m / 500000 m |
+| Gravitational parameter | 3.986004418e14 m³/s² |
+| Orbit layout | 4 planes, 15 satellites/plane, 88° inclination |
+| RAAN / phasing | 0°,45°,90°,135°; anomaly `2*pi*j/15 + 2*pi*p/60` |
+| Earth rotation | 7.2921150e-5 rad/s |
+| Epoch | 2026-01-01 UTC; declared synthetic ECI/ECEF alignment 0 |
+| Elevation mask / snapshots | 10°; 14 windows of 60s |
+| Users | Static 49–51°N,80–69°W; uniform sin(latitude)/longitude; minimum .5° separation |
+| Sampling | Independent SHA-256-derived named MT19937 streams; 100000 layout proposal cap |
+| Pools / instances | Access 5 and separate egress 5; 2 instances/type/host; maximum 8 active/host |
+
+Ground stations are at (49.93,-79.53) and (49.93,-69.53) degrees. The epoch
+alignment is synthetic, not astronomical Greenwich orientation. Each slice draws
+its chain/demand/SLA once; type coefficients/overhead and satellite CPU are also
+sampled once. Exact seeds, accepted draws and layout rejection counts are saved.
+No layout is retried for network feasibility. A sampling-cap failure produces an
+explicit generation-failed record.
+
+ISLs connect the two same-plane neighbors and corresponding-index neighbors in
+adjacent planes, without an end-plane wrap. Earth-occluded edges are removed.
+Geometry is never altered to restore coverage/connectivity. The full validator
+independently recomputes physical coordinates/visibility/edge policy before
+checking resources and delay. Alternate coordinate evaluations have a 128-ulp
+orbital-radius comparison envelope in metres; existing CPU, integrality,
+throughput and delay residual targets remain unchanged.
+
+`audit` records separate access and egress matching flows, unmatched users and
+residual min-cut certificates, a global minimum-CPU necessary condition, coverage,
+ISL degree and connected components. Multiple GS choices do not multiply a
+satellite's egress capacity. Passing these checks does not prove full
+routing/CPU/radio/SLA feasibility. A failed physical preflight returns a typed
+`preflight_infeasible` episode before either optimizer stage is built.
+
+The independent region calculation gives a 14.056535° elevation cap. Only two
+planes can intersect the expanded user rectangle over the frozen 840s interval,
+and each can contribute at most two satellites: access capacity is at most
+`4*5=20 < 30`. The reference family is therefore an infeasibility audit under
+these assumptions. Development seed 0 also has coverage gaps: only 1 of 14
+snapshots passes necessary checks. Neither seed 0 trace is claimed to support a
+successful physical episode. A different geometry requires a separately versioned
+approved family; no new family is introduced to turn these failures into success.
+Artifact validation can approve a correctly recorded failed episode; it does not
+certify a physical deployment or training readiness.
+
+Plot saved data with an interpreter that has Matplotlib installed:
+
+```powershell
+python examples/plot_coverage.py runs/development-audit.json --output runs/development-plots
+```
+
+Plotting is separate from the solver environment. The script records Python,
+Matplotlib and input/code hashes, and writes coverage/connectivity PNGs. Dateline
+crossing edges are omitted from the drawing only, not from the network data.
+
+The supervised ladder measures `(S,U)=(2,1),(4,2),(8,4)` on separately labeled
+authored diagnostics, not cropped physical inputs. Its v2 fixes chain length 2,
+2 instances/type/host, 2000 MIPS and both pools 5 across sizes. Actual Stage II
+variable counts are 82,336,1648. Generated/presolved sizes, coefficient ranges,
+build/solve/validation times, bounds/progress, first independently checked
+incumbent and peak process memory are retained. Memory includes the interpreter,
+imports and SCIP. A measured proportional forecast, 2 GiB ceiling and 250000-link
+guard block unsupported growth. These measurements do not establish a speed
+advantage, dimension reduction, physical-scale solve or training readiness.
 
 ## Scientific scope
 

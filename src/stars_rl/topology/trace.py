@@ -117,6 +117,9 @@ def _ordered_scenario(s: Scenario) -> Scenario:
 
 
 def _authored_windows(s: Scenario) -> tuple[NetworkWindow,...]:
+    if s.orbit is not None:
+        from .physical import physical_windows
+        return physical_windows(s)
     if s.family_classification not in ("authored_toy","analytical_fixture"):
         raise ValueError("C05 constructs authored traces only; physical generation is C14")
     users=tuple(u.id for u in s.users);satellites=tuple(x.id for x in s.satellites)

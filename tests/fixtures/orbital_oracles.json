@@ -1,0 +1,17 @@
+{
+  "provenance": "Literal analytical geometry checks; no generated visibility used as an oracle",
+  "earth_radius_m": 6371000,
+  "orbital_radius_m": 6871000,
+  "p0_j0_eci_at_epoch_m": [6871000, 0, 0],
+  "equator_longitude0_surface_m": [6371000, 0, 0],
+  "overhead_elevation_degrees": 90,
+  "opposite_side_elevation_degrees": -90,
+  "region_enclosing_radius_bound_degrees": 6.5,
+  "plane_spacing_degrees": 24,
+  "cap_angle_approx_degrees": 14.056535,
+  "region_max_visible_satellites": 4,
+  "region_max_access_capacity": 20,
+  "reference_users": 30,
+  "maximum_isl_degree": 4,
+  "named_streams": ["layout", "chain", "demand", "delay", "cpu", "coefficients", "overhead"]
+}

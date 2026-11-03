@@ -1,0 +1,4 @@
+# Same frozen geometry;4 users/2 slices. A candidate, not guaranteed feasible.
+physical_schema_version: 1
+family_id: development-physical-v1
+root_seed: 0

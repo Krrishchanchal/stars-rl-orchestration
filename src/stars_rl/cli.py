@@ -23,7 +23,9 @@ def build_parser() -> argparse.ArgumentParser:
     doctor = commands.add_parser("doctor", help="Check the installed optimization backend")
     doctor.add_argument("--solver", action="store_true", required=True)
     generate=commands.add_parser('generate',help='Materialize an authored scenario trace (physical generator is later work)')
-    generate.add_argument('--scenario',required=True,type=Path)
+    source=generate.add_mutually_exclusive_group(required=True)
+    source.add_argument('--scenario',type=Path)
+    source.add_argument('--physical-config',type=Path)
     generate.add_argument('--output',required=True,type=Path)
     simulate=commands.add_parser('simulate',help='Run one fixed-method episode transactionally')
     simulate.add_argument('--trace',type=Path)
@@ -41,6 +43,13 @@ def build_parser() -> argparse.ArgumentParser:
     target=validate.add_mutually_exclusive_group(required=True)
     target.add_argument('--trace',type=Path)
     target.add_argument('--run-dir',type=Path)
+    audit=commands.add_parser('audit',help='Coverage, matching certificates, connectivity and physical cap bound')
+    audit.add_argument('--trace',required=True,type=Path)
+    audit.add_argument('--output',required=True,type=Path)
+    benchmark=commands.add_parser('benchmark',help='Start a supervised authored single-window size ladder')
+    benchmark.add_argument('--output',required=True,type=Path)
+    benchmark.add_argument('--sizes',nargs='+',default=['2:1','4:2','8:4'])
+    benchmark.add_argument('--budget',type=float,default=10)
     return parser
 
 
@@ -58,13 +67,24 @@ def main(argv: Sequence[str] | None = None) -> int:
             from stars_rl.topology.trace import build_trace,trace_to_dict
             from stars_rl.experiments.manifest import atomic_json,file_hash,utc_now,environment
             output=args.output.resolve();sidecar=output.with_name(output.name+'.generation.json')
-            if output.exists() or sidecar.exists():raise ValueError('generation output already exists; choose a new path')
+            failed=output.with_name(output.name+'.generation-failed.json')
+            if output.exists() or sidecar.exists() or failed.exists():raise ValueError('generation output already exists; choose a new path')
             output.parent.mkdir(parents=True,exist_ok=True)
-            started=time.perf_counter();trace=build_trace(load_scenario(args.scenario));elapsed=time.perf_counter()-started
+            started=time.perf_counter();sampling=None
+            if args.physical_config is not None:
+                from stars_rl.topology.physical import load_physical_config
+                try:trace,sampling=load_physical_config(args.physical_config)
+                except ValueError as exc:
+                    if hasattr(exc,'diagnostics'):
+                        atomic_json(failed,{'schema_version':1,'status':'generation_failed','diagnostics':exc.diagnostics,'generated_at':utc_now()})
+                    raise
+            else:trace=build_trace(load_scenario(args.scenario))
+            elapsed=time.perf_counter()-started
             atomic_json(output,trace_to_dict(trace))
             atomic_json(sidecar,{'schema_version':1,'generated_at':utc_now(),'generation_seconds':elapsed,
-                'scope':'authored trace preparation, outside decision budget','trace_content_hash':trace.content_hash,
-                'trace_artifact_hash':trace.artifact_hash,'scenario_source_sha256':file_hash(args.scenario),'environment':environment()})
+                'scope':'offline trace preparation, outside decision budget','trace_content_hash':trace.content_hash,
+                'trace_artifact_hash':trace.artifact_hash,'scenario_source_sha256':file_hash(args.physical_config or args.scenario),
+                'sampling':sampling,'environment':environment()})
             print(json.dumps({'trace':str(output),'generation_record':str(sidecar),'trace_content_hash':trace.content_hash}))
         if args.command=='simulate':
             import yaml
@@ -79,7 +99,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if args.resume:
                 saved=read_json(folder/'settings.json')
                 defaults={'rho':saved['rho'],'window_budget_seconds':saved['window_budget_seconds'],'solver_seed':saved['solver_seed']}
-            else:defaults={'rho':1,'window_budget_seconds':10,'solver_seed':0}
+            else:defaults={'rho':1,'window_budget_seconds':None,'solver_seed':0}
             config=defaults|config
             result=run_experiment(args.trace,args.output_root,args.run_id,method,
                 rho=config['rho'] if args.rho is None else args.rho,
@@ -98,6 +118,20 @@ def main(argv: Sequence[str] | None = None) -> int:
                 report=validate_run(args.run_dir)
             print(json.dumps(report,indent=2,allow_nan=False))
             return 0 if report['valid'] and report.get('usable_episode',True) else 1
+        if args.command=='audit':
+            from stars_rl.topology.trace import load_trace
+            from stars_rl.topology.audit import audit_trace
+            from stars_rl.experiments.manifest import atomic_json
+            if args.output.exists():raise ValueError('audit output exists; choose a new path')
+            report=audit_trace(load_trace(args.trace));args.output.parent.mkdir(parents=True,exist_ok=True)
+            atomic_json(args.output,report)
+            print(json.dumps({'audit':str(args.output.resolve()),'all_windows_necessary_passed':report['all_windows_necessary_passed'],
+                              'scope':'necessary conditions only; failed coverage is retained'}))
+        if args.command=='benchmark':
+            from stars_rl.topology.benchmark import benchmark_ladder
+            result=benchmark_ladder(args.output,tuple(tuple(map(int,value.split(':'))) for value in args.sizes),args.budget)
+            print(json.dumps(result,indent=2,allow_nan=False))
+            return 0 if all(row['status']=='success' for row in result['records']) else 1
     except (OSError,ValueError,KeyError,TypeError,RuntimeError) as exc:
         print(json.dumps({'error':str(exc),'type':type(exc).__name__}),file=sys.stderr)
         return 2

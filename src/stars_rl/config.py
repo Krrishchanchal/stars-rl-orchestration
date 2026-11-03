@@ -50,7 +50,8 @@ def _decode(data, annotation, path: str):
         if not all(isinstance(key,str) for key in data):
             raise ValueError(f"{path}: field names must be strings")
         names = {f.name for f in fields(annotation)}
-        if names != data.keys():
+        optional={"orbit"} if annotation is Scenario else set()
+        if names-optional-data.keys() or data.keys()-names:
             raise ValueError(f"{path}: missing fields {sorted(names-data.keys())}; "
                              f"unknown fields {sorted(data.keys()-names)}")
         hints = get_type_hints(annotation)
@@ -65,7 +66,8 @@ def _decode(data, annotation, path: str):
 
 def _encode(record):
     if is_dataclass(record):
-        return {f.name:_encode(getattr(record,f.name)) for f in fields(record)}
+        return {f.name:_encode(getattr(record,f.name)) for f in fields(record)
+                if not (isinstance(record,Scenario) and f.name=='orbit' and record.orbit is None)}
     if isinstance(record,tuple):
         return [_encode(item) for item in record]
     return record
