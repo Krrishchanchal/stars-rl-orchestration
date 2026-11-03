@@ -1,0 +1,19 @@
+{
+  "scope": "C05 authored undirected connectivity; optimizer rejection remains C06/C07",
+  "toy_content_hash": "6c6e0c00f1be0f1563afdd3b04d5450d01b6cbfbf076620d9dc1ab12cfb8e5ec",
+  "hash_derivation": "Independent script read toy.yaml with safe_load (no production imports), sorted entity lists by explicit stable IDs and instances by (type,id,host), removed scenario_id/family_id/family_classification/metadata, wrapped in {content_hash_schema_version:1,scenario_inputs:...}, compact sorted-key UTF-8 JSON, SHA-256. Relative windows, actual coordinates, visibility/distances, demands, resources and radio inputs remain.",
+  "route_cases": [
+    {"id": "one-hop", "nodes": ["a","b"], "edges": [["a","b",100000]], "access": "a", "hosts": ["b"], "egress": "b", "expected": [500000,100000,[],0,500000]},
+    {"id": "two-hop", "nodes": ["a","b","c"], "edges": [["a","b",100000],["b","c",200000]], "access": "a", "hosts": ["c"], "egress": "c", "expected": [500000,300000,[],0,500000]},
+    {"id": "colocation", "nodes": ["a"], "edges": [], "access": "a", "hosts": ["a","a"], "egress": "a", "expected": [500000,0,[0],0,500000]},
+    {"id": "O-ENDACCESS", "nodes": ["a","b"], "edges": [], "access": "a", "hosts": ["b","b"], "egress": "b", "error": "access_to_first_host"},
+    {"id": "O-ENDINTERNAL", "nodes": ["a","b"], "edges": [], "access": "a", "hosts": ["a","b"], "egress": "b", "error": "internal_host_path[0]"},
+    {"id": "O-ENDEGRESS", "nodes": ["a","b"], "edges": [], "access": "a", "hosts": ["a","a"], "egress": "b", "error": "last_host_to_egress"},
+    {"id": "bridge-ENDACCESS", "nodes": ["a","b"], "edges": [["a","b",100000]], "access": "a", "hosts": ["b","b"], "egress": "b", "expected": [500000,100000,[0],0,500000]},
+    {"id": "bridge-ENDINTERNAL", "nodes": ["a","b"], "edges": [["a","b",100000]], "access": "a", "hosts": ["a","b"], "egress": "b", "expected": [500000,0,[100000],0,500000]},
+    {"id": "bridge-ENDEGRESS", "nodes": ["a","b"], "edges": [["a","b",100000]], "access": "a", "hosts": ["a","a"], "egress": "b", "expected": [500000,0,[0],100000,500000]},
+    {"id": "distinct-access-egress", "nodes": ["a","b"], "edges": [["a","b",100000]], "access": "a", "hosts": ["a","b"], "egress": "b", "expected": [500000,0,[100000],0,500000], "hand_witness": "One user/chain[f0,f1], demand2 Mbps, CPU100 MIPS per stage on separate 300-MIPS hosts, overhead5/10, pools2 each. L=[20,40] MIPS; allocated100 each fits. Actual occupancy-one toy radio >12Mbps. Conservative delay <=1100000/299792458+0.0012+0.0024+0.001 <0.009s <0.05s. This hand witness is not a solver/independent-validator result."}
+  ],
+  "path_tie": {"nodes":["a","b","c","d"],"edges":[["a","b",1],["b","d",1],["a","c",1],["c","d",1]],"expected_a_d":["a","b","d"],"rule":"Among exact equal-cost paths, lexicographically smallest complete ID sequence from smaller endpoint; reverse for opposite direction. No approximate-cost tie tolerance."},
+  "toy": {"node_ids":["s0","s1","s2"],"distance_matrix_m":[[0,100000,200000],[100000,0,100000],[200000,100000,0]],"access_visibility":[[[true,true,false],[true,true,false]],[[false,true,false],[true,true,false]],[[false,true,false],[true,true,false]]],"ground_visibility":[[true],[true],[false]],"start_seconds":[0,60,120]}
+}

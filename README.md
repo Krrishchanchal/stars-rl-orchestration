@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The project is being implemented incrementally. The current release provides the Python package, CLI, a verified SCIP backend capability check, validated scenario/deployment schemas with an explicit toy configuration, and direct numeric physics calculations. The STARS network model, simulations, and RL functionality are not implemented yet.
+The project is being implemented incrementally. The current release provides the Python package, CLI, a verified SCIP backend capability check, validated scenario/deployment schemas, direct numeric physics calculations, and immutable authored toy traces with deterministic shortest paths. The STARS optimization model, simulations, and RL functionality are not implemented yet.
 
 ## Requirements
 
@@ -88,7 +88,7 @@ provide round-trips. Deployment/outcome serializers and
 `validate_deployment_structure` check IDs, completeness and type compatibility.
 They do not certify CPU, radio, routing, visibility or delay feasibility; that needs
 the later independent deployment validator. A candidate outcome is not a deployment
-approval. Toy trace/path construction remains a later milestone.
+approval. Authored trace/path construction is available as described below.
 
 ## Numeric physics
 
@@ -102,8 +102,8 @@ occupancy because there is no active user rate there.
 `end_to_end_delay` returns all five propagation classes: user-to-access,
 access-to-first-host, consecutive host paths, last-host-to-egress and egress-to-GS.
 It also retains each stage's processing delay and access serialization. Callers
-must supply resolved path distances; path construction and reachability checks
-are not implemented yet. Zero path distance represents colocation; unavailable
+must supply resolved path distances; the authored trace API below now constructs
+them and checks connectivity. Zero path distance represents colocation; unavailable
 paths (`None` or infinity) are rejected.
 
 Latency uses one representative packet unchanged along the chain, not all traffic
@@ -124,6 +124,53 @@ an independent high-precision radio reference, documented in
 `tests/fixtures/physics_oracles.json`. Comparing a solver export with these same
 production helpers would provide consistency evidence only; it would not replace
 the independent deployment validator planned for a later milestone.
+
+## Authored traces and paths
+
+`build_trace` materializes every authored window without sampling or solving.
+Snapshots retain all satellites, explicit access/ground distance matrices (with
+`None` for invisible pairs), visibility masks and all-pairs undirected ISL paths.
+Shortest paths include identity paths of distance zero; disconnected pairs are
+`None`. Unknown IDs are input errors. No host is pruned because of visibility or CPU.
+
+Equal-cost paths use the lexicographically smallest complete ID sequence from
+the smaller endpoint; reverse queries reverse that same path. Costs are compared
+without an approximate tie tolerance. This is shortest-path computation, not a
+placement heuristic.
+
+From the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -c "from stars_rl.config import load_scenario; from stars_rl.topology.trace import build_trace; t = build_trace(load_scenario('configs/toy.yaml')); print(len(t.windows), t.windows[0].paths.get('s0', 's2').distance_m)"
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_paths.py tests/unit/test_trace.py -q
+```
+
+The first command prints `3 200000.0`. Toy windows start at relative seconds
+0, 60 and 120; u0 loses its s0 access edge in the second window. The last two
+windows have unchanged connectivity.
+
+`window.route_distances(user_id, access_id, host_ids, egress_id, ground_station_id)`
+assembles all five propagation classes for the selected ordered host tuple.
+Unavailable access, ground or ISL segments raise `RouteUnavailableError` carrying
+the failed segment and endpoints. It checks connectivity only; resource, type,
+throughput and SLA feasibility still need the later model/validator gates.
+
+`save_trace` / `load_trace` round-trip versioned JSON, retaining the full scenario,
+metadata and derived snapshots. Loading verifies checksums and reconstructs caches
+from source inputs, rejecting stale/corrupt paths or matrices.
+
+Two SHA-256 identifiers serve different purposes. `artifact_hash` includes full
+provenance and cached paths. `content_hash` covers normalized exogenous inputs:
+stable entity IDs, coordinates, link visibility/distances, relative window timing,
+chains, demands, packets, resources and radio values. It excludes scenario/family
+labels and generation/group/seed/absolute-time metadata, so relabeling identical
+inputs does not evade content identity. Numeric equivalents such as 200 and 200.0
+and different input insertion orders normalize identically. Stable entity IDs
+remain semantic keys. The frozen toy content hash is recorded with independent
+fixture derivations in `tests/fixtures/topology_oracles.json`.
+
+This builder supports authored toy/analytical inputs. Physical trace generation,
+matching audits, optimization and episode simulation remain later milestones.
 
 ## Scientific scope
 
