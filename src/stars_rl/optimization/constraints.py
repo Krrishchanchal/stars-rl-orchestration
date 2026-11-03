@@ -81,7 +81,7 @@ def add_linkage_constraints(model: Model, scenario: Scenario, window: NetworkWin
 
 
 def build_association_model(scenario: Scenario, window: NetworkWindow) -> tuple[Model,AssociationVariables]:
-    """C1–C6 feasibility only; no Stage I objective/reference behavior yet."""
+    """C1–C6 feasibility only; Stage I objectives are attached separately."""
     model=create_model("association_feasibility")
     variables=create_association_variables(model,scenario,window)
     add_association_constraints(model,scenario,window,variables)

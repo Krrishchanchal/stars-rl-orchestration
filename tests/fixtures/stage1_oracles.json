@@ -1,0 +1,12 @@
+{
+  "provenance": "Hand-enumerated C10 expectations, not solver measurements",
+  "assignment_costs": [[1, 4], [3, 1]],
+  "capacity_per_satellite": 1,
+  "minimum_access_distance": 2,
+  "one_of_two_users_switches": {"l1": 2, "normalized": 0.5},
+  "full_switch": {"l1": 4, "normalized": 1},
+  "binary_absolute_difference": [[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 0]],
+  "stage1_fraction_of_total_budget": 0.15,
+  "propagation_absolute_gap_seconds": 1e-10,
+  "temporal_absolute_gap": 1e-8
+}

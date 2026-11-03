@@ -338,6 +338,44 @@ events, not measurements of packet loss or migration downtime.
 
 Stage I/II objectives and orchestration remain later milestones.
 
+## Stage I association optimization
+
+`build_stage1_model` builds a **binary linear** C1–C6 association model. The
+first window minimizes the sum of access and egress propagation in seconds.
+Later windows minimize `w_alpha*D_alpha + w_xi*D_xi`, with default weights of 1 and 1
+and the visibility-repaired reference. `reference_mode="original"` selects the
+documented diagnostic variant. Deviations use full logical domains, including
+unavailable prior choices, and fixed `2*users` denominators. There are no CPU,
+placement, radio-throughput or complete-route constraints in Stage I.
+
+```python
+import time
+from stars_rl.optimization.stage1 import run_stage1
+
+started_at = time.perf_counter()  # before any observation/inference/repair work
+outcome = run_stage1(scenario, window, previous,
+                     total_budget_seconds=10, started_at=started_at)
+if outcome.status == "reference_ready":
+    reference = outcome.stage1_reference
+```
+
+Stage I build, warm-start submission, solving, extraction and independent checking
+must finish by 15% of the total window budget. Remaining solver allowance shrinks
+with elapsed work. Late results are retained diagnostically and cannot become a
+reference; build/check overruns are detected rather than forcibly interrupted.
+A valid nonoptimal incumbent may become a soft reference, with its original
+status/bounds/gaps preserved. No incumbent means `stage1_no_reference`, with its
+underlying cause; repair is never silently substituted.
+
+The independent checker validates raw rows and decoded C1–C6, and recomputes both
+the encoded objective and actual association deviations. Epigraph auxiliaries
+may be slack in nonoptimal or zero-weight solutions, so their values are never
+reported as actual change metrics. Reference availability certifies association
+feasibility only. Stage II/full deployment validation is still required.
+Explicit `objective_mode="propagation"` supports later hierarchy-only windows;
+these use no prior temporal state/start when called with `previous=None`.
+No secondary tie-breaking objective is added. C11 Stage II is still pending.
+
 ## Scientific scope
 
 The planned core uses SCIP through PySCIPOpt, retains continuous CPU allocation and hard feasibility constraints, and preserves temporal repair plus two-stage orchestration. The RL layer will select objective-weight ratios only after the fixed-weight optimizer has been independently validated. This project does not claim exact reproduction of unavailable author code or guaranteed RL superiority.
