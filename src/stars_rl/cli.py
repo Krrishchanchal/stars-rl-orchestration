@@ -68,6 +68,16 @@ def build_parser() -> argparse.ArgumentParser:
     train.add_argument('--epsilon-decay-steps',type=int,default=1000)
     train.add_argument('--readiness',type=Path)
     train.add_argument('--resume',action='store_true')
+    split=commands.add_parser('split',help='Freeze lineage/content/interval-disjoint train/validation/test groups')
+    for partition in ('train','validation','test'):split.add_argument('--'+partition,required=True,nargs='+',type=Path)
+    split.add_argument('--output',required=True,type=Path)
+    split.add_argument('--guard-seconds',type=float)
+    split.add_argument('--phase-groups',type=Path,help='Known phase-cycle IDs keyed by trace content hash')
+    evaluate=commands.add_parser('evaluate',help='Validation-only selection then frozen paired held-out evaluation')
+    evaluate.add_argument('--split',required=True,type=Path)
+    evaluate.add_argument('--policy-run',required=True,nargs='+',type=Path)
+    evaluate.add_argument('--output',required=True,type=Path)
+    evaluate.add_argument('--budget',type=float,default=60)
     return parser
 
 
@@ -75,6 +85,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run the command-line interface and return its success status."""
     args = build_parser().parse_args(argv)
     try:
+        if args.command=='split':
+            from stars_rl.experiments.splits import create_split
+            from stars_rl.experiments.manifest import read_json
+            from stars_rl.topology.trace import load_trace
+            result=create_split({p:[load_trace(path) for path in getattr(args,p)] for p in ('train','validation','test')},
+                args.output,guard_seconds=args.guard_seconds,phase_groups=None if args.phase_groups is None else read_json(args.phase_groups))
+            print(json.dumps({'split_hash':result['split_hash'],'groups':len(result['components'])}))
+            return 0
+        if args.command=='evaluate':
+            from stars_rl.experiments.evaluate import evaluate
+            result=evaluate(args.split,args.policy_run,args.output,budget=args.budget)
+            print(json.dumps(result,indent=2,allow_nan=False))
+            return 0 if result['status']=='completed' else 1
         if args.command=='train':
             from stars_rl.rl.q_learning import LearningConfig
             from stars_rl.rl.training import train

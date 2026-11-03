@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Frozen circular-orbit generation, coverage audits, an objective-weight environment, and tabular Q-learning with boundary recovery are implemented. The solver-backed training pilot remains blocked by scientific readiness gates.
+The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Frozen circular-orbit generation, coverage audits, tabular Q-learning with boundary recovery, and grouped frozen-policy evaluation are implemented. The solver-backed training pilot and scientific held-out evaluation remain blocked by readiness gates.
 
 ## Requirements
 
@@ -734,6 +734,66 @@ accepted transitions with uninterrupted execution. Their artifacts are explicitl
 labeled `controlled_test_adapter`, record zero actual solver calls, and cannot
 resume as standard training. They establish software recovery, without a
 solver-backed pilot, convergence, speed or policy-improvement claim.
+
+## Grouped splits and frozen-policy evaluation
+
+Freeze the supplied trace groups before validation tuning:
+
+```powershell
+stars-rl split --train runs/train-a.json --validation runs/validation-a.json --test runs/test-a.json --output runs/split-v1
+stars-rl evaluate --split runs/split-v1 --policy-run runs/q-seed0 runs/q-seed1 --output runs/evaluation-v1 --budget 60
+```
+
+These commands require actual eligible inputs. Current physical coverage and
+training gates remain open, so no scientific held-out policy results are claimed.
+Controlled C16 test checkpoints are rejected by the public evaluation command;
+it records a blocked manifest without evaluating the test set. There is no CLI
+flag to relabel controlled software fixtures as trained scientific policies.
+
+Split manifests bind normalized exogenous-content hashes, exact trace artifacts,
+root lineage, declared groups, constellation/layout identity, time intervals and
+connected components. Relabeled duplicates and load variants of a shared root
+cannot cross partitions. The guard is at least the longest episode duration.
+Overlapping intervals and known repeated phase cycles join components transitively.
+Repeated constellation/layout families are conservatively grouped even across
+large gaps; identical physical base geometry also survives metadata relabeling.
+Optional `--phase-groups PATH` supplies known cycle IDs keyed by content hash.
+No input screening occurs here: supplied failures remain in the split. Declare
+upstream lineage and selection honestly; shared constellation design may still
+correlate distinct groups, and temporal separation alone proves no independence.
+
+Evaluation loads completed boundary checkpoints and checks their input/source
+integrity, training-partition provenance, solver budget/runtime, optimizer code,
+frozen observation/action/reward schema and horizon. It permits new evaluation
+code while comparing the actual optimizer/environment source to training. A
+checkpoint's recorded training artifact cannot be relabeled after fitting to
+hide a lineage overlap. Its entire declared input pool belongs in the training
+partition, even if a short pilot visits only a subset. Q values, exploration RNG, counters and schemas remain
+unchanged throughout validation and test rollouts; unseen states use ratio `0.5`.
+
+All five fixed ratios run on the same validation traces and budget. The comparator
+minimizes mean penalized score, averaging episodes within each connected group
+before weighting groups equally; ties prefer `0.5`, then the smallest ratio.
+Policy configurations are selected using validation scores only, retaining all
+training seeds of the winning configuration. Candidate configurations require
+the same complete seed grid. No best-seed selection or test-time bin fitting is
+performed.
+
+The selected policies, checkpoint hashes, comparator and input/source hashes are
+saved in `frozen-selection.json` before any test reward is read. A one-shot
+`test-consumed.json` claim is written into the split directory before testing;
+repeat evaluation is refused, including after interruption. Evaluation resume is
+unsupported. Treat an interrupted test as consumed and document any new study;
+do not reset the claim to tune repeatedly against the same held-out outcomes.
+
+Test comparisons always include fixed `0.5` and the validation-tuned ratio, paired
+with every selected policy seed on identical episodes and budgets. Modeled
+failures retain their horizon-bounded penalized score, failure cause, raw solver
+statuses and attempted windows. Physical metrics for unattempted windows remain
+null. Infrastructure/numerical errors abort evaluation instead of being dropped
+or turned into network rewards. Saved records include source/input snapshots,
+completion rates and per-group paired differences. They are descriptive; crossed
+uncertainty estimates and publication figures remain C18 work.
 
 ## Scientific scope
 
