@@ -1,0 +1,26 @@
+# Independent baselines, not recovered author MINLP/MINLP-TD/MINLP-HD methods.
+# These are diagnostic defaults, not validation-tuned performance comparators.
+schema_version: 1
+window_budget_seconds: 10
+failure_policy: terminate_episode
+methods:
+  mono-delay:
+    initial_objective: Q
+    later_objective: Q
+    prior_start: false
+  mono-temporal:
+    initial_objective: Q
+    later_objective: D_alpha+D_xi+D_beta_original
+    prior_start: true
+  hier-only:
+    initial_objective: propagation_then_H
+    later_objective: propagation_then_H
+    prior_start: false
+  stars-fixed:
+    initial_objective: propagation_then_H
+    later_objective: repaired_associations_then_H+rho_D_beta
+    prior_start: true
+    diagnostic_rho: 1
+    always_report_rho: 0.5
+initialization_studies: [native_initialization, common_initial_state]
+# stars-random/stars-q action selection remains a later RL milestone.

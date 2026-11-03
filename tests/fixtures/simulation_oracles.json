@@ -1,0 +1,11 @@
+{
+  "provenance": "C12 literal orchestration expectations, not solver measurements",
+  "native_initial_objectives": {"mono-delay": "Q", "mono-temporal": "Q", "hier-only": "propagation then H", "stars-fixed": "propagation then H"},
+  "later_objectives": {"mono-delay": "Q", "mono-temporal": "D_alpha+D_xi+D_beta against original", "hier-only": "propagation then H", "stars-fixed": "D_alpha(repaired)+D_xi(repaired) then H+rho*D_beta"},
+  "forced_disconnected_handover": {"access_switches": 1, "egress_switches": 1, "assignment_changes": 1, "host_changes": 1},
+  "failure_policy": "terminate first failed decision; remaining windows not_attempted; committed prior never overwritten",
+  "initial_stars_ratio": 0.5,
+  "stage1_budget_fraction": 0.15,
+  "solve_cutoff_fraction": 0.95,
+  "final_cutoff_fraction": 1
+}

@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The project is being implemented incrementally. The current release provides the Python package, CLI, a verified SCIP backend, validated schemas, numeric physics, authored traces, and the discrete model. A C07 draft now adds continuous CPU, radio and end-to-end delay constraints. Its acceptance awaits C08's independent validator. The STARS workflow, simulations and RL remain pending.
+The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. Experiment manifests, physical trace generation and RL remain later milestones.
 
 ## Requirements
 
@@ -43,14 +43,13 @@ python3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-Invalid CLI options return a nonzero exit status. There are no runnable optimization, simulation, or training commands yet.
+Invalid CLI options return a nonzero exit status. Optimization and episode simulation are available through the Python APIs below; standalone simulation and training CLI commands remain later work.
 
 The doctor prints JSON containing analytical assignment and nonlinear reciprocal checks,
 raw statuses, stage-local bounds/gaps, versions and warm-start diagnostics. Its exit status
 is nonzero on a failed check. It is a backend smoke check, not a validated STARS deployment.
 Solver tests additionally cover inactive undersized/zero-capacity hosts, algebraic CPU
-allocation, physical scaling extremes and original-unit residual calibration. The full
-independent deployment validator is still pending. No solver test is silently skipped.
+allocation, physical scaling extremes and original-unit residual calibration. The independent deployment validator checks complete exported candidates. No solver test is silently skipped.
 
 Verified on Windows with CPython 3.11.4, PySCIPOpt 6.3.0 and bundled SCIP 10.0.2.
 The pinned Windows wheel installs without a separate SCIP installation or solver license.
@@ -123,7 +122,7 @@ The first command prints `0.0012` seconds. Tests use hand-derived examples and
 an independent high-precision radio reference, documented in
 `tests/fixtures/physics_oracles.json`. Comparing a solver export with these same
 production helpers would provide consistency evidence only; it would not replace
-the independent deployment validator planned for a later milestone.
+the independent deployment validator described below.
 
 ## Authored traces and paths
 
@@ -170,7 +169,8 @@ remain semantic keys. The frozen toy content hash is recorded with independent
 fixture derivations in `tests/fixtures/topology_oracles.json`.
 
 This trace builder supports authored toy/analytical inputs. Physical trace generation,
-matching audits, full optimization and episode simulation remain later milestones.
+and matching audits remain later milestones. Full optimization and episode simulation
+are implemented for authored inputs.
 
 ## Discrete optimization layer
 
@@ -189,7 +189,7 @@ at least one eligible user-stage selects it; the activation upper bound counts
 eligible user-stage occurrences, including users sharing a slice.
 
 Reachable multi-hop hosts remain available regardless of direct user visibility.
-The binary domain retains compatible instances on zero-CPU hosts; the C07 draft's
+The binary domain retains compatible instances on zero-CPU hosts; the full model's
 resource constraints reject their active use. Unreachable
 link products are omitted together with explicit endpoint prohibition rows,
 and every route-link class must sum to one. No nearest-host filtering is used.
@@ -197,7 +197,7 @@ All constraints/variables have deterministic source-family/entity names.
 
 Both builders currently use a constant feasibility objective. The association
 builder contains no placement/routing/CPU/radio/delay variables or constraints;
-Stage I objectives and orchestration are still pending. Discrete-model solutions
+Stage I adds objectives separately. Discrete-model solutions
 do not certify CPU, radio throughput, delay or complete deployment feasibility.
 The resource/delay additions below and independent validator are required for that
 approval. CPU allocation is continuous.
@@ -336,7 +336,7 @@ null change fields. Supply the immediately preceding window's availability
 the last committed deployment across failed windows. These are window-level
 events, not measurements of packet loss or migration downtime.
 
-Stage I/II objectives and orchestration remain later milestones.
+Stage I/II objectives and episode orchestration are described below.
 
 ## Stage I association optimization
 
@@ -374,7 +374,7 @@ reported as actual change metrics. Reference availability certifies association
 feasibility only. Stage II/full deployment validation is still required.
 Explicit `objective_mode="propagation"` supports later hierarchy-only windows;
 these use no prior temporal state/start when called with `previous=None`.
-No secondary tie-breaking objective is added. C11 Stage II is still pending.
+No secondary tie-breaking objective is added.
 
 ## Stage II full deployment optimization
 
@@ -416,8 +416,62 @@ Accumulated auxiliary errors cannot underreport the actual discrete objective
 by more than the fixed `1e-8` objective target. Positive epigraph slack in a
 nonoptimal result is retained separately from actual change metrics.
 
-The result is a validated deployment candidate. Cross-window commit/state
-orchestration is the next milestone, C12, and is not implemented yet.
+The result is a validated deployment candidate. The episode runner below checks
+and commits final choices for the following window.
+
+## Episode simulation and independent baselines
+
+```python
+from stars_rl.config import load_scenario
+from stars_rl.topology.trace import build_trace
+from stars_rl.simulation import simulate
+
+trace = build_trace(load_scenario("configs/toy.yaml"))  # offline common input
+result = simulate(trace, "stars-fixed", rho=0.5, total_budget_seconds=10)
+for window in result.windows:
+    print(window.window_index, window.status, window.reason)
+```
+
+Each call owns fresh state. A final deployment becomes the next window's
+committed prior only after independent validation at the state boundary and an
+on-time decision. The raw export, separate stage statuses/bounds/gaps, start
+reports, residuals, actual metrics, original prior and final commit are retained.
+The extra commit-boundary check consumes the same shared budget; no extra solve
+or secondary objective is introduced.
+
+| Method | Initial objective | Later objective | Prior-window start |
+|---|---|---|---|
+| `mono-delay` | Mean E2E/SLA, `Q` | `Q` | None |
+| `mono-temporal` | `Q` | `D_alpha+D_xi+D_beta`, original prior | Repaired associations and compatible placements |
+| `hier-only` | Propagation then `H` | Propagation then `H` | None; Stage II can start from current Stage I associations |
+| `stars-fixed` | Propagation then `H` | Repaired association deviations then `H+rho*D_beta` | Repair/previous partial starts |
+
+The first three are independently specified baselines, not recovered author
+MINLP methods. Definitions/defaults are in `configs/baselines.yaml`. Default
+`rho=1` is diagnostic, not a validation-tuned comparator; always report `rho=0.5`
+separately. Initial STARS setup records the forced irrelevant ratio 0.5 because
+there is no prior placement. `stars-random`/`stars-q` policy selection is not
+implemented at C12 and is rejected rather than simulated as a fixed policy.
+
+The failure policy is **terminate at the first failed decision**. Proven
+infeasibility, timeout/no incumbent, missing Stage I reference and late decisions
+remain distinguishable. Remaining windows are explicitly `not_attempted`, never
+fabricated successes or zero-cost outcomes. The last committed state is retained.
+Numerical rejection and infrastructure/corrupted-data errors abort separately,
+with `transition_valid=False`; they are not ordinary network failures. No reward
+or training policy is implemented here.
+
+Passing a saved **base full-model** window 0 export as `initial_export=...` runs a
+separate `common_initial_state` study: the seed is independently checked within
+the window budget and native initial objectives are skipped. Ordinary calls are
+labeled `native_initialization`. Results from these studies must not be merged.
+Synthetic analytical rates require original trusted tables supplied as
+`radio_coefficients_by_window={window_index: table}`.
+
+`simulate` commits in memory and returns dataclass records. Transactional files,
+run manifests, recovery and simulation CLI commands are C13 work. `services`
+injection is for controlled runtime tests and labels results as test adapters.
+These tiny tests are not physical-scale or RL performance evidence.
 
 ## Scientific scope
 
