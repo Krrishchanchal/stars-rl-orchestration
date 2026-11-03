@@ -56,6 +56,18 @@ def build_parser() -> argparse.ArgumentParser:
     sensitivity_source.add_argument('--constructed',action='store_true')
     sensitivity.add_argument('--output',required=True,type=Path)
     sensitivity.add_argument('--budget',type=float,default=None)
+    train=commands.add_parser('train',help='Gate-checked tabular Q-learning pilot with episode-boundary replay')
+    train.add_argument('--trace',required=True,nargs='+',type=Path)
+    train.add_argument('--output',required=True,type=Path)
+    train.add_argument('--episodes',type=int,default=3)
+    train.add_argument('--budget',type=float,default=60)
+    train.add_argument('--seed',type=int,default=0)
+    train.add_argument('--learning-rate',type=float,default=.1)
+    train.add_argument('--epsilon-start',type=float,default=1)
+    train.add_argument('--epsilon-end',type=float,default=.05)
+    train.add_argument('--epsilon-decay-steps',type=int,default=1000)
+    train.add_argument('--readiness',type=Path)
+    train.add_argument('--resume',action='store_true')
     return parser
 
 
@@ -63,6 +75,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run the command-line interface and return its success status."""
     args = build_parser().parse_args(argv)
     try:
+        if args.command=='train':
+            from stars_rl.rl.q_learning import LearningConfig
+            from stars_rl.rl.training import train
+            from stars_rl.topology.trace import load_trace
+            result=train([load_trace(p) for p in args.trace],args.output,episodes=args.episodes,budget=args.budget,
+                config=LearningConfig(learning_rate=args.learning_rate,seed=args.seed,epsilon_start=args.epsilon_start,
+                    epsilon_end=args.epsilon_end,epsilon_decay_steps=args.epsilon_decay_steps),
+                evidence_path=args.readiness,resume=args.resume)
+            print(json.dumps(result,indent=2,allow_nan=False))
+            return 0 if result['status']=='completed' else 1
         if args.command=='action-sensitivity':
             from stars_rl.experiments.manifest import atomic_json
             if args.output.exists():raise ValueError('sensitivity output exists; choose a new path')
@@ -74,6 +96,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 from stars_rl.rl.sensitivity import measure_trace
                 report=measure_trace(load_trace(args.trace),total_budget_seconds=args.budget)
             args.output.parent.mkdir(parents=True,exist_ok=True)
+            from stars_rl.experiments.manifest import environment,compatibility_profile
+            report['runtime_profile']=compatibility_profile(environment())
             atomic_json(args.output,report)
             print(json.dumps({'output':str(args.output.resolve()),'constructed_gate_passed':report.get('constructed_gate_passed'),
                               'training_gate':report.get('training_gate','physical readiness remains OPEN')}))

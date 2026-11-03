@@ -11,6 +11,7 @@ import platform
 import subprocess
 import sys
 import tempfile
+import time
 
 
 SCHEMA_VERSION=1
@@ -48,7 +49,17 @@ def atomic_json(path,value):
     try:
         with os.fdopen(fd,'w',encoding='utf-8',newline='\n') as stream:
             stream.write(payload);stream.flush();os.fsync(stream.fileno())
-        os.replace(temp,path)
+        # Windows scanners/indexers can briefly hold the destination without
+        # delete sharing. Retry only those Windows errors; preserve atomicity,
+        # the old file and the final exception on persistent access denial.
+        for attempt in range(6):
+            try:
+                os.replace(temp,path)
+                break
+            except PermissionError as exc:
+                if getattr(exc,'winerror',None) not in (5,32,33) or attempt==5:
+                    raise
+                time.sleep(.01*2**attempt)
     finally:
         if os.path.exists(temp):os.unlink(temp)
 

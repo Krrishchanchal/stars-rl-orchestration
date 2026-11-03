@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Frozen circular-orbit generation, coverage/capacity audits, and an objective-weight control environment are available. Policy training remains later work.
+The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Frozen circular-orbit generation, coverage audits, an objective-weight environment, and tabular Q-learning with boundary recovery are implemented. The solver-backed training pilot remains blocked by scientific readiness gates.
 
 ## Requirements
 
@@ -678,6 +678,62 @@ ratios. Development physical seed 0 fails initial necessary coverage checks.
 Representative useful action effects and feasible physical episodes remain an
 open training gate. No geometry, capacities or constraints were changed to
 manufacture a gain; the analytical fixture is separately labeled.
+
+## Tabular Q-learning and training checkpoints
+
+`rl.q_learning.TabularQ` uses a private seeded Python RNG and linear epsilon
+decay per learnable decision. Defaults are learning rate `0.1`, discount `0.95`,
+epsilon `1.0` to `0.05` over 1000 decisions. These are recorded starting settings,
+with no claim that they are tuned. Initialization does not draw exploration,
+decay epsilon, update Q, or increment action frequencies. Terminal transitions
+never bootstrap. `select(state, training=False)` is greedy and preserves the
+Q table, RNG and counters, including for unseen states.
+
+```powershell
+stars-rl train --trace runs/development-trace.json --output runs/q-pilot --episodes 3 --budget 60 --seed 0
+```
+
+With current evidence this command exits with a blocked status and saves a
+compute estimate, readiness reasons and manifest. It performs no training
+episodes. The default pilot limit is three episodes; a larger launch requires
+a reviewed measured pilot. The estimate includes initialization, five-action
+sensitivity replay, validation, six evaluation passes (five fixed ratios and one
+policy), and constructed sensitivity solves. It is a conservative decision-budget
+bound; generation, artifact I/O and other offline work still need measured time.
+
+A future pilot also requires `--readiness PATH`, a JSON map with `constructed`
+and `scaling` report paths plus ordered `successful_runs` and `sensitivity`
+path lists, one per input trace. Paths stay within the evidence directory.
+Readiness checks compatible code/runtime, physical necessary conditions,
+independently validated complete episodes, a size/budget-compatible measured
+ladder authorizing physical experiments, and positive cross-weight objective
+margins on representative traces. Sensitivity commands now save runtime profiles
+and Stage I references for independent rechecks. Current reference/development
+coverage failures, toy degeneracy and the small authored ladder leave these
+gates open. There is no CLI override to bypass them.
+
+For an eligible run, a complete atomic checkpoint is saved before episode 0 and
+after every completed episode. It stores Q values, both owned RNG states,
+trace/group ordering, next episode, epsilon schedule/counters, action frequencies,
+schemas/bins/reward hashes, solver settings, source hashes and code revision.
+Trace inputs and the actual source tree are snapshotted, including dirty sources.
+No active deployment is stored at a boundary. Restart with the same inputs and
+arguments plus `--resume`; configuration, source, runtime or schema changes are
+rejected. A completed compatible resume performs no additional episodes.
+
+Interrupted episodes restart from the preceding published boundary: partial
+updates are discarded and partial logs remain labeled abandoned. This includes
+interruption during episode 0 and between checkpoint writing and publication.
+Accepted raw records and summary hashes are verified on resume. Infrastructure
+or numerical exceptions abort the run and require diagnosis rather than becoming
+network rewards. Persistent file errors still raise; transient Windows atomic
+replacement denials have six attempts with waits of 10/20/40/80/160 milliseconds.
+
+Controlled deterministic tests compare final Q/RNG/checkpoint contents and
+accepted transitions with uninterrupted execution. Their artifacts are explicitly
+labeled `controlled_test_adapter`, record zero actual solver calls, and cannot
+resume as standard training. They establish software recovery, without a
+solver-backed pilot, convergence, speed or policy-improvement claim.
 
 ## Scientific scope
 

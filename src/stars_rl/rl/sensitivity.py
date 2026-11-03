@@ -35,6 +35,8 @@ def replay_actions(environment):
                          terminated=terminated,info=info,decision_class=decision_class(record.committed_deployment),stages=stages,
                          export=record.export,commit_validation=record.commit_validation,
                          metrics=None if record.metrics is None else asdict(record.metrics),
+                         stage1_reference=None if record.stage1_outcome is None or record.stage1_outcome.stage1_reference is None
+                         else asdict(record.stage1_outcome.stage1_reference),
                          elapsed_seconds=record.elapsed_seconds,preflight=record.preflight))
     distinct = len({json.dumps(row['decision_class'],sort_keys=True) for row in rows if row['decision_class'] is not None})
     return dict(pre_action_state=source,observation=observation(environment.trace,environment._index,previous,environment._churn),
