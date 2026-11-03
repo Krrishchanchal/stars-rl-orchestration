@@ -1,0 +1,9 @@
+{
+  "oracle": "O-GWPAIR/O-METRIC: authored expectations, not solver measurements",
+  "gateway_order": ["retain visible old pair", "old satellite minimum distance then GS ID", "global minimum distance then satellite ID then GS ID", "explicit failure"],
+  "two_users_one_access_switch": {"events": 1, "l1": 2, "normalized": 0.5},
+  "two_stages_change_host": {"assignment_events": 2, "host_events": 2, "beta_l1": 4},
+  "same_host_instance_change": {"assignment_events": 1, "instance_id_events": 1, "host_events": 0},
+  "initial_setup_changes": 0,
+  "missing_outcome_changes": null
+}

@@ -300,6 +300,44 @@ CPU, routing, occupancy and throughput cases. Tests and public oracle metadata
 are in `tests/unit/test_validator.py`, `tests/unit/test_residuals.py`,
 `tests/solver/test_export_validation.py` and `tests/fixtures/validator_oracles.json`.
 
+## Temporal repair and observed changes
+
+`repair_previous(scenario, window, previous)` retains visible associations and
+repairs missing access links by minimum propagation distance, with stable-ID
+ties. Gateway repair retains the old visible pair, then tries another ground
+station on the old satellite, then the globally nearest visible pair. Missing
+alternatives produce explicit failure records. These are visibility references;
+capacity collisions and disconnected routes can still make them infeasible.
+The original committed deployment is immutable and remains separate.
+
+```python
+from stars_rl.optimization.repair import repair_previous, partial_start_values
+from stars_rl.optimization.backend import submit_start
+
+repair = repair_previous(scenario, window, previous)
+if repair.status == "candidate":
+    values = partial_start_values(scenario, window, repair)
+    start = submit_start(model, values, kind="partial")
+```
+
+Use `include_placement=False` for an association-only model. Starts specify only
+compatible alpha/xi/beta binaries; CPU, reciprocal, occupancy, routing and future
+deviation auxiliaries remain unknown. A stored partial start is not a feasibility
+certificate. Final results still require independent validation.
+
+`change_metrics(scenario, original_previous, final_deployment,
+previous_available=...)` compares with the last original committed deployment,
+including choices that are no longer visible. It counts one switch once and
+reports the corresponding two one-hot flips separately. Access, gateway pair,
+function assignment, instance-ID, host and instance activation changes have
+separate fields. Initial setup has zero changes; missing final deployments have
+null change fields. Supply the immediately preceding window's availability
+(`None` before the first window) to count outage/restoration events, while keeping
+the last committed deployment across failed windows. These are window-level
+events, not measurements of packet loss or migration downtime.
+
+Stage I/II objectives and orchestration remain later milestones.
+
 ## Scientific scope
 
 The planned core uses SCIP through PySCIPOpt, retains continuous CPU allocation and hard feasibility constraints, and preserves temporal repair plus two-stage orchestration. The RL layer will select objective-weight ratios only after the fixed-weight optimizer has been independently validated. This project does not claim exact reproduction of unavailable author code or guaranteed RL superiority.
