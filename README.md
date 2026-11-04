@@ -2,7 +2,7 @@
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
-The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Frozen circular-orbit generation, coverage audits, tabular Q-learning with boundary recovery, and grouped frozen-policy evaluation are implemented. The solver-backed training pilot and scientific held-out evaluation remain blocked by readiness gates.
+The current implementation provides validated scenario inputs, authored traces, continuous-CPU optimization, independent deployment checks, temporal repair, both STARS stages, and episode simulation with three independent baselines. The experiment runner records reproducible inputs and artifacts. Frozen circular-orbit generation, coverage audits, tabular Q-learning, grouped frozen-policy evaluation, and saved-result analysis/plots are implemented. The solver-backed training pilot and scientific held-out evaluation remain blocked by readiness gates.
 
 ## Requirements
 
@@ -794,6 +794,77 @@ null. Infrastructure/numerical errors abort evaluation instead of being dropped
 or turned into network rewards. Saved records include source/input snapshots,
 completion rates and per-group paired differences. They are descriptive; crossed
 uncertainty estimates and publication figures remain C18 work.
+
+## Saved-result tables and figures
+
+Analyze a completed frozen evaluation, with optional accepted training curves:
+
+```powershell
+stars-rl plot --evaluation runs/evaluation-v1 --training runs/q-seed0 runs/q-seed1 --output runs/analysis-v1 --bootstrap-seed 0
+```
+
+Or analyze saved C13 fixed-method runs:
+
+```powershell
+stars-rl plot --run runs/example/stars-fixed --output runs/example-analysis
+```
+
+The command writes `analysis.json`, `episodes.csv`, `methods.csv` and a provenance
+manifest. Output directories must be new. This path uses the standard library
+and imports no solver, topology, environment or learner. It verifies saved
+manifest/schema versions, source/input/artifact checksums, frozen selection,
+paired episode domains and trace identities. It reads recorded independent
+commit approvals; it does not rerun feasibility validation or optimization.
+
+Optional PNG rendering uses a separate interpreter with Matplotlib installed:
+
+```powershell
+stars-rl plot --run runs/example/stars-fixed --output runs/example-figures --plot-python python
+```
+
+`--plot-python` may be an absolute interpreter path. Without it, the command
+writes analysis and tables only. To render an existing analysis without reading
+or regenerating simulation results:
+
+```powershell
+python src/stars_rl/experiments/plots.py --analysis runs/analysis-v1/analysis.json --output runs/analysis-v1/figures
+```
+
+Keep the accompanying `analysis_manifest.json`; the renderer checks its saved
+analysis checksum. Matplotlib is optional and is not added to the solver
+environment. Rendering was verified locally with the existing separate
+Matplotlib 3.8.2 interpreter. Rendering provenance records Python, platform,
+Matplotlib/backend/DPI, code and input hashes, figure checksums, methods,
+scenarios and aggregation rules. Each figure also displays input/run/scenario
+hashes and its interpretation.
+
+Scores include every modeled failure with the episode-origin discounted
+absorbing tail. Unattempted physical metrics remain null. Delay mean/p95/CDF
+pool observed committed user-windows only; p95 uses linear interpolation.
+Resource summaries use committed-window CPU including instance overhead and
+active-instance counts. Event counts carry observation denominators. Failure,
+completion and timeout rates use all episodes; selected-action counts exclude
+forced initialization. Recorded stage-solve, attempted-window decision and
+episode wall times have distinct denominators. Unavailable physical quantities
+appear as NA, never fabricated zero measurements.
+
+Policy comparisons average episodes within connected groups, weight groups
+equally, and then average policy seeds. The exploratory 95% crossed bootstrap
+uses 2000 draws with independent seed and group resampling, preserving the
+Cartesian grid and matched baseline. Fixed-method comparisons resample paired
+groups only; `rho=0.5` is the diagnostic reference when present. Duplicate
+normalized traces, missing pairs, incompatible budgets and implementation-error
+episodes reject analysis. With fewer than three training seeds or ten groups,
+intervals are explicitly descriptive/exploratory. C13 diagnostics use declared
+groups and do not acquire a held-out independence claim through plotting.
+
+Training curves show accepted completed episodes, retaining failures and
+excluding abandoned partial updates; they do not establish convergence or
+policy improvement. Controlled fixtures stay labeled as controlled. Current
+diagnostic plots and arithmetic tests establish the analysis workflow; physical
+training, scientific held-out comparisons and an RL superiority claim remain
+unsupported by the available data. No published reference percentages are
+inserted into measured results.
 
 ## Scientific scope
 

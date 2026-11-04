@@ -78,6 +78,14 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument('--policy-run',required=True,nargs='+',type=Path)
     evaluate.add_argument('--output',required=True,type=Path)
     evaluate.add_argument('--budget',type=float,default=60)
+    plot=commands.add_parser('plot',help='Analyze saved artifacts; optionally render using a plotting interpreter')
+    source=plot.add_mutually_exclusive_group(required=True)
+    source.add_argument('--evaluation',type=Path)
+    source.add_argument('--run',nargs='+',type=Path)
+    plot.add_argument('--training',nargs='*',type=Path,default=[])
+    plot.add_argument('--output',required=True,type=Path)
+    plot.add_argument('--bootstrap-seed',type=int,default=0)
+    plot.add_argument('--plot-python',type=Path,help='Optional Python with Matplotlib; isolated from solver dependencies')
     return parser
 
 
@@ -85,6 +93,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run the command-line interface and return its success status."""
     args = build_parser().parse_args(argv)
     try:
+        if args.command=='plot':
+            from stars_rl.experiments.aggregate import analyze
+            result=analyze(args.output,evaluation=args.evaluation,runs=args.run,training=args.training,bootstrap_seed=args.bootstrap_seed)
+            rendered=False
+            if args.plot_python is not None:
+                import subprocess
+                renderer=Path(__file__).with_name('experiments')/'plots.py'
+                rendered_process=subprocess.run([str(args.plot_python),str(renderer),'--analysis',str(args.output/'analysis.json'),
+                                '--output',str(args.output/'figures')],capture_output=True,text=True)
+                if rendered_process.returncode:raise RuntimeError('Saved tables completed; renderer failed: '+rendered_process.stderr[-2000:])
+                rendered=True
+            print(json.dumps({'status':'completed','methods':len(result['methods']),'figures_rendered':rendered,'solver_calls':0}))
+            return 0
         if args.command=='split':
             from stars_rl.experiments.splits import create_split
             from stars_rl.experiments.manifest import read_json
