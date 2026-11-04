@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "scope": "One local Windows authored-diagnostic smoke run; not a trained-policy or scaling result",
+  "python": "3.11.4",
+  "pyscipopt": "6.3.0",
+  "scip": "10.0.2",
+  "setup": {
+    "fresh_virtual_environment": true,
+    "system_site_packages": false,
+    "locked_wheels_only": true,
+    "editable_no_build_isolation": true,
+    "pip_check": "passed"
+  },
+  "toy": {
+    "trace_hash": "6c6e0c00f1be0f1563afdd3b04d5450d01b6cbfbf076620d9dc1ab12cfb8e5ec",
+    "validated_windows": 3,
+    "native_stage_solves": 6,
+    "rho": 0.5,
+    "window_budget_seconds": 10,
+    "penalized_score": 0.475
+  },
+  "saved_untrained_policy": {
+    "fresh_process_replay": true,
+    "policy_unchanged": true,
+    "learning_updates": 0,
+    "exploration_steps": 0
+  },
+  "plot_only": {
+    "figures": 5,
+    "solver_calls": 0,
+    "matplotlib": "3.8.2"
+  },
+  "measured_command_wall_seconds": {
+    "doctor": 0.932,
+    "generate": 2.666,
+    "simulate": 2.97,
+    "validate": 0.81,
+    "handover_demo": 1.012,
+    "saved_policy_create_and_infer": 1.379,
+    "saved_policy_fresh_process_replay": 1.556,
+    "saved_analysis": 0.707,
+    "plot_only_separate_interpreter": 4.136
+  },
+  "limits": [
+    "Single-run timings are not a performance guarantee",
+    "CPU allocations and delays can vary among tied optima",
+    "Scientific trained-policy evaluation remains blocked",
+    "Linux, Colab and notebook execution not verified"
+  ],
+  "fresh_environment_suite": {
+    "tests": 729,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "wall_seconds": 253.91
+  }
+}

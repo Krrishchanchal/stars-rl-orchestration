@@ -6,6 +6,9 @@ __pycache__/
 venv/
 .pytest_cache/
 .ipynb_checkpoints/
+*.egg-info/
+build/
+dist/
 .tmp/
 
 # Local credentials

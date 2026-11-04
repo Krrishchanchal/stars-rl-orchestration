@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "scope": "Authored diagnostic expectations; no trained-policy or physical-scale claim",
+  "toy": {
+    "scenario_id": "toy-v1",
+    "users": 2,
+    "windows": 3,
+    "committed_windows": 3,
+    "solver_calls": 6,
+    "rho": 0.5,
+    "window_budget_seconds": 10,
+    "penalized_score": 0.475,
+    "score_absolute_tolerance": 1e-8,
+    "trace_content_hash": "6c6e0c00f1be0f1563afdd3b04d5450d01b6cbfbf076620d9dc1ab12cfb8e5ec"
+  },
+  "forced_handover": {
+    "validated_windows": 3,
+    "access_switches_by_window": [0, 1, 0],
+    "stage_host_changes_by_window": [0, 2, 0],
+    "delay_sla_ms": 50
+  },
+  "saved_untrained_policy": {
+    "committed_windows": 3,
+    "solver_calls": 6,
+    "updates": 0,
+    "exploration_steps": 0,
+    "policy_unchanged": true
+  },
+  "analysis": {
+    "solver_calls": 0,
+    "observed_user_windows": 6,
+    "failure_rate": 0,
+    "png_figures_without_training_or_comparisons": 5
+  },
+  "not_fixed": ["CPU allocations among tied optima", "delay values among tied allocations", "wall-clock durations"],
+  "acceptance": "All deployed windows must pass the existing independent validator; no numeric model thresholds are relaxed."
+}

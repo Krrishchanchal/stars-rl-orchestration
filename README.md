@@ -9,7 +9,7 @@ The current implementation provides validated scenario inputs, authored traces, 
 - Python 3.11
 - Windows PowerShell or a POSIX-compatible shell
 
-Only Windows PowerShell has been verified locally so far. The CI workflow checks the same package and tests on Ubuntu.
+Windows PowerShell is the locally tested platform. An Ubuntu CI workflow is configured; its remote execution and Colab have not been verified here.
 
 ## Setup
 
@@ -17,9 +17,10 @@ Only Windows PowerShell has been verified locally so far. The CI workflow checks
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements-build-lock.txt
-.\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
+.\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements-build-lock.txt
+.\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements-lock.txt
 .\.venv\Scripts\python.exe -m pip install --no-build-isolation --no-deps -e .
+.\.venv\Scripts\python.exe -m pip check
 ```
 
 ### POSIX shells
@@ -28,10 +29,112 @@ These are the corresponding commands; local POSIX execution has not yet been ver
 
 ```sh
 python3.11 -m venv .venv
-.venv/bin/python -m pip install -r requirements-build-lock.txt
-.venv/bin/python -m pip install -r requirements-lock.txt
+.venv/bin/python -m pip install --only-binary=:all: -r requirements-build-lock.txt
+.venv/bin/python -m pip install --only-binary=:all: -r requirements-lock.txt
 .venv/bin/python -m pip install --no-build-isolation --no-deps -e .
 ```
+
+The build-toolchain lock is installed first. `--no-build-isolation --no-deps`
+keeps editable installation on that toolchain and the runtime lock. A missing
+compatible wheel is a visible setup failure. CPU SCIP is bundled in the tested
+Windows PySCIPOpt wheel; the quickstart needs no separate solver license,
+Gurobi, GPU, API keys, credentials or source PDFs.
+
+## Tested Windows quickstart
+
+Run from a checkout after setup, using a new `runs/quickstart` directory:
+
+```powershell
+$TaskPython = ".\.venv\Scripts\python.exe"
+& $TaskPython -m stars_rl.cli doctor --solver
+& $TaskPython -m stars_rl.cli generate --scenario configs/toy.yaml --output runs/quickstart/toy-trace.json
+& $TaskPython -m stars_rl.cli simulate --trace runs/quickstart/toy-trace.json --output-root runs/quickstart --run-id toy-fixed --method stars-fixed --rho 0.5 --budget 10
+& $TaskPython -m stars_rl.cli validate --run-dir runs/quickstart/toy-fixed/stars-fixed
+& $TaskPython examples/demo.py --output runs/quickstart/handover
+& $TaskPython examples/saved_policy_demo.py --trace runs/quickstart/toy-trace.json --output runs/quickstart/saved-policy
+& $TaskPython examples/saved_policy_demo.py --trace runs/quickstart/toy-trace.json --policy-dir runs/quickstart/saved-policy --output runs/quickstart/policy-replay
+& $TaskPython -m stars_rl.cli plot --run runs/quickstart/toy-fixed/stars-fixed --output runs/quickstart/analysis
+```
+
+The authored toy should complete three independently validated windows. Each
+window runs two stages, for six solver calls. The penalized score is `0.475`
+within absolute `1e-8`; the trace hash and other expectations are in
+`examples/expected_quickstart.json`. CPU allocations among tied optima, delays
+and wall times may vary. Existing independent feasibility tolerances still
+apply; passing expected scalar checks never substitutes for validation.
+
+The HTML handover demo is `runs/quickstart/handover/index.html`. Its middle
+window has one access switch and two function-host moves; initialization and
+the final window have zero changes. Open it locally:
+
+```powershell
+Start-Process .\runs\quickstart\handover\index.html
+```
+
+The saved-policy example writes an initial empty-Q checkpoint, reloads it and
+performs native SCIP inference with a frozen greedy policy. The second command
+replays that saved file in a fresh process. Both runs must preserve the policy
+hash, report zero learning/exploration updates and complete three validated
+windows. This is an **untrained policy diagnostic**, not a completed training
+run or scientific held-out evaluation. The gated `evaluate` command remains
+blocked until eligible trained-policy artifacts exist.
+
+For optional figures, use an interpreter that already has Matplotlib installed;
+it can be separate from the solver environment:
+
+```powershell
+python src/stars_rl/experiments/plots.py --analysis runs/quickstart/analysis/analysis.json --output runs/quickstart/analysis/figures
+```
+
+This plot-only command reads the saved analysis and checksum manifest and makes
+zero solver calls. It produces five diagnostic PNGs. No Matplotlib installation
+is needed for the preceding table/analysis command. The optional notebook is
+deferred; these CLI and example scripts are the executable demo without copied
+optimization equations.
+
+### Troubleshooting and scientific limits
+
+- **Existing output:** choose a new run/output name. Completed simulation resume
+  requires the same inputs, code and runtime; held-out test claims are one-shot.
+- **Missing wheel/build backend:** use Python 3.11, install the build lock first,
+  and retain `--no-build-isolation`. Do not silently skip backend checks.
+- **Windows temp-file denial or filename too long:** use a short writable
+  directory for `TEMP` and `TMP` in that installation shell, then retry the same
+  pinned install. This was needed in the local sandbox. The first default-temp
+  attempt and a longer-path retry are retained in the local reproduction evidence.
+- **Matplotlib missing:** use a plotting interpreter with Matplotlib; keep its
+  dependencies separate from the solver environment. Tables still work without it.
+- **Physical preflight failure:** this is a recorded modeled outcome. The frozen
+  reference is coverage-infeasible and development seed 0 has coverage gaps.
+- **Training/evaluation blocked:** follow the gated `train`, `split`, `evaluate`
+  sections below after suitable evidence exists. No full training launch or
+  trained-policy gain is established by this quickstart. Exact time-limited
+  solver or cross-hardware bitwise reproduction is not promised.
+
+### Recorded local smoke timings
+
+`examples/quickstart_sample.json` contains one measured Windows run. The clean
+source snapshot used its own Git repository and a new venv with user/system
+site packages disabled. Exact locked wheels were downloaded first and installed
+offline; build/runtime locks and `--no-build-isolation --no-deps` were verified.
+The source was clean after the commands, including generated ignored outputs.
+
+| Command | Wall seconds in this run |
+|---|---:|
+| Doctor | 0.932 |
+| Generate toy trace | 2.666 |
+| Simulate three windows / six stages | 2.970 |
+| Independently validate saved run | 0.810 |
+| Forced-handover HTML demo | 1.012 |
+| Save/reload untrained policy and infer | 1.379 |
+| Replay saved policy in another process | 1.556 |
+| Saved-result analysis/tables | 0.707 |
+| Plot-only rendering, separate interpreter | 4.136 |
+
+These include command startup and are a single diagnostic observation, not a
+solver-speed or scaling benchmark. Installation retries, network transfer and
+full-suite timing are separate. Only the Windows CLI paths above were executed;
+POSIX, Colab, full training and notebook execution are not verified here.
 
 ## Current commands
 
@@ -43,7 +146,7 @@ python3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-Invalid CLI options return a nonzero exit status. Optimization and episode simulation are available through the Python APIs and CLI below. Training remains later work.
+Invalid CLI options return a nonzero exit status. Optimization, training and evaluation software are available below; actual training and scientific held-out runs remain subject to their readiness gates.
 
 The doctor prints JSON containing analytical assignment and nonlinear reciprocal checks,
 raw statuses, stage-local bounds/gaps, versions and warm-start diagnostics. Its exit status
@@ -60,7 +163,7 @@ Linux CI is configured; its remote execution has not been verified here.
 `configs/toy.yaml` freezes `toy-v1`: two users, three satellites (one with zero CPU),
 two function types and three 60-second windows. It includes every instance identity,
 resource pool, radio constant, access window, ground link and undirected ISL distance.
-It is synthetic connectivity, not an orbital scenario. Feasibility is not yet established.
+It is synthetic connectivity, not an orbital scenario. The quickstart checks its native deployment feasibility independently.
 
 After installing the current lock files, inspect its schema from the repository root:
 
@@ -80,7 +183,7 @@ Demand, chain and SLA belong to each slice and apply to each of its users;
 psi, omega and overhead belong to each function type. Access and egress pools are
 separate. Instances use `(function_type_id, instance_id, satellite_id)` identities.
 Generation metadata preserves family/lineage, named seeds and scoped original draws;
-no physical scenario generator exists yet.
+the frozen physical generator and coverage audits are described below.
 
 `scenario_to_dict` / `scenario_from_dict` and `dump_scenario` / `load_scenario`
 provide round-trips. Deployment/outcome serializers and
@@ -243,7 +346,7 @@ supplied separately to the independent validator.
 
 All five propagation classes, every candidate processing term and access
 serialization enter C16. The builders retain a constant feasibility objective;
-STARS method objectives and two-stage orchestration remain later work. No extra
+STARS objectives and two-stage orchestration wrap this shared feasibility model. No extra
 ISL traffic constraints, scheduling policy or secondary CPU objective is added.
 
 ```powershell
@@ -263,8 +366,7 @@ occupancies, rates and encoded delay components. No-incumbent outcomes retain
 their status and have no candidate. Exported reports say `validation: not_run`.
 An optimal solver status or a C04-helper consistency comparison does not approve
 a deployment. The independent C08 validator checks full raw/decoded residuals
-and corrupted exports; the joint C07/C08 acceptance gate passes. Stage I/II,
-simulation and RL remain later work.
+and corrupted exports. Stage I/II, simulation and the RL environment use these checks at their commit boundaries.
 
 Analytical expectations and limits are in `tests/fixtures/resource_oracles.json`.
 
@@ -422,6 +524,19 @@ and commits final choices for the following window.
 
 ## Episode simulation and independent baselines
 
+For a short, real-solver demonstration of forced handover and service relocation:
+
+```powershell
+.\.venv\Scripts\python.exe examples/demo.py
+Start-Process .\runs\demo\index.html
+```
+
+Use your installed Python environment if it has a different name. The script
+creates a separately labeled analytical fixture with authored visibility and
+physical radio calculations. It writes a self-contained HTML report, summary
+and raw solver/validation records to ignored `runs/demo/`. It demonstrates fixed
+STARS optimization, not RL or physical orbital trace generation.
+
 ```python
 from stars_rl.config import load_scenario
 from stars_rl.topology.trace import build_trace
@@ -479,9 +594,9 @@ These tiny tests are not physical-scale or RL performance evidence.
 From the repository root, using the Python environment where this package is installed:
 
 ```powershell
-.\.venv-c03\Scripts\python.exe -m stars_rl.cli generate --scenario configs/toy.yaml --output runs/toy-trace.json
-.\.venv-c03\Scripts\python.exe -m stars_rl.cli simulate --trace runs/toy-trace.json --run-id demo-c13 --method stars-fixed --rho 0.5 --budget 10
-.\.venv-c03\Scripts\python.exe -m stars_rl.cli validate --run-dir runs/demo-c13/stars-fixed
+.\.venv\Scripts\python.exe -m stars_rl.cli generate --scenario configs/toy.yaml --output runs/toy-trace.json
+.\.venv\Scripts\python.exe -m stars_rl.cli simulate --trace runs/toy-trace.json --run-id demo-c13 --method stars-fixed --rho 0.5 --budget 10
+.\.venv\Scripts\python.exe -m stars_rl.cli validate --run-dir runs/demo-c13/stars-fixed
 ```
 
 `generate --scenario` materializes authored scenarios; `--physical-config` creates
@@ -523,7 +638,7 @@ Recovery uses **whole-episode replay from the initial boundary**, including an
 interruption in episode 0:
 
 ```powershell
-.\.venv-c03\Scripts\python.exe -m stars_rl.cli simulate --run-id demo-c13 --method stars-fixed --resume
+.\.venv\Scripts\python.exe -m stars_rl.cli simulate --run-id demo-c13 --method stars-fixed --resume
 ```
 
 The runner first checks saved config, exact trace identity, boundary-state hash,
@@ -550,9 +665,9 @@ ignored by Git; keep generated results and any private inputs out of public comm
 ## Physical generation, audits and initial scaling
 
 ```powershell
-.\.venv-c03\Scripts\python.exe -m stars_rl.cli generate --physical-config configs/development-physical-v1.yaml --output runs/development-trace.json
-.\.venv-c03\Scripts\python.exe -m stars_rl.cli audit --trace runs/development-trace.json --output runs/development-audit.json
-.\.venv-c03\Scripts\python.exe -m stars_rl.cli benchmark --output runs/size-ladder
+.\.venv\Scripts\python.exe -m stars_rl.cli generate --physical-config configs/development-physical-v1.yaml --output runs/development-trace.json
+.\.venv\Scripts\python.exe -m stars_rl.cli audit --trace runs/development-trace.json --output runs/development-audit.json
+.\.venv\Scripts\python.exe -m stars_rl.cli benchmark --output runs/size-ladder
 ```
 
 `configs/paper-inputs-v1.yaml` selects the separate 30-user reference audit.
