@@ -20,6 +20,7 @@ dist/
 data/generated/
 checkpoints/
 runs/
+artifacts/
 
 # Source PDFs are not redistributed with this project
 *.pdf

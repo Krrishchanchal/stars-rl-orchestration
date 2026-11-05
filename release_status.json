@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "project_version": "0.1.0",
+  "implementation_scope": "C01-C20 academic software prototype; no scientific release claim",
+  "license": "undecided_by_owner",
+  "citation": "optional_deferred_pending_owner_metadata",
+  "release_tag": "not_created",
+  "verified_platform": "Windows CPU; remote CI/Linux/Colab not verified locally",
+  "gates": {
+    "reference_family_physical_feasibility": "failed_under_frozen_geometry",
+    "development_seed0_coverage": "failed_necessary_checks",
+    "physical_scale_runtime": "open",
+    "representative_action_sensitivity": "open",
+    "trained_policy_pilot": "not_run",
+    "scientific_held_out_evaluation": "not_run",
+    "remote_ci": "not_verified",
+    "optional_notebook": "deferred"
+  },
+  "claims": {
+    "continuous_cpu_and_hard_constraints": true,
+    "independent_commit_validation": true,
+    "author_code_recovered": false,
+    "rl_superiority_demonstrated": false,
+    "physical_training_ready": false
+  },
+  "policy": "No tag or publication is authorized by passing regression tests. Resolve and review release blockers separately."
+}

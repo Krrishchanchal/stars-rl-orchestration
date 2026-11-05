@@ -1,5 +1,6 @@
 """Reproduce the observed Windows replace denial without weakening errors."""
 import os
+import time
 import pytest
 
 from stars_rl.experiments.manifest import atomic_json,read_json
@@ -8,13 +9,19 @@ from stars_rl.experiments.manifest import atomic_json,read_json
 @pytest.mark.parametrize('failures',[2,6])
 def test_transient_and_persistent_windows_replace_denial(tmp_path,monkeypatch,failures):
     path=tmp_path/'state.json';atomic_json(path,{'old':True})
-    original=os.replace;calls=[];waits=[]
+    original=os.replace;real_sleep=time.sleep;calls=[];waits=[]
     def replace(source,target):
         calls.append((source,target))
         if len(calls)<=failures:
             error=PermissionError('controlled Windows access denial');error.winerror=5
             raise error
-        return original(source,target)
+        # Keep incidental host locks separate from the controlled failure
+        # sequence. The production waits are mocked to inspect them exactly.
+        for attempt in range(10):
+            try:return original(source,target)
+            except PermissionError as exc:
+                if getattr(exc,'winerror',None) not in (5,32,33) or attempt==9:raise
+                real_sleep(.05)
     monkeypatch.setattr('stars_rl.experiments.manifest.os.replace',replace)
     monkeypatch.setattr('stars_rl.experiments.manifest.time.sleep',waits.append)
     if failures==6:

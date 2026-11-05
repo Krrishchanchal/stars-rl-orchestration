@@ -981,6 +981,39 @@ training, scientific held-out comparisons and an RL superiority claim remain
 unsupported by the available data. No published reference percentages are
 inserted into measured results.
 
+## CI and academic handoff status
+
+The C01–C20 software implementation roadmap ends here. See
+[EVIDENCE.md](EVIDENCE.md), [CHANGELOG.md](CHANGELOG.md), and
+[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for executed checks and remaining
+scientific/owner decisions. `release_status.json` keeps these scopes machine-readable.
+
+Push/PR workflows run the fast profile on configured Windows and Ubuntu runners.
+The full suite is available through **Actions → tests → Run workflow → full**;
+larger regression work is explicit rather than launched on every push. Both
+profiles require the CPU backend doctor first and reject empty suites, missing
+solver tests, failures, errors and skipped tests. Hosted CI has not been executed
+from this local session; configuration is not evidence of a remote pass.
+
+Run the same checks locally after setup, using new output directories:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/ci_checks.py --suite fast --output artifacts/fast
+.\.venv\Scripts\python.exe scripts/ci_checks.py --suite full --output artifacts/full
+.\.venv\Scripts\python.exe -m stars_rl.experiments.release --ci-report artifacts/full/public/ci-report.json --output artifacts/release-review.json
+```
+
+Only the `public/` summary/evidence JSON files are selected for CI upload. Raw
+logs, JUnit and generated runs stay outside that upload path. Source checks flag
+tracked credentials, PDFs and generated/private artifacts; they do not replace
+human review. Test success never silently clears physical/training/evaluation
+blockers. `--require-release` explicitly fails while release blockers remain.
+
+The owner has left the project license undecided. No license file, citation with
+invented author information, repository-visibility change, tag or publication is
+created by C20. It remains an academic prototype; the known scientific limits
+above continue to apply. The notebook is optional/deferred.
+
 ## Scientific scope
 
 The core uses SCIP through PySCIPOpt, retains continuous CPU allocation and hard feasibility constraints, and preserves temporal repair plus two-stage orchestration. The environment selects objective-weight ratios around the independently validated optimizer. This project does not claim exact reproduction of unavailable author code or guaranteed RL superiority.

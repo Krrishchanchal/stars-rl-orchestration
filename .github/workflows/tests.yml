@@ -3,13 +3,31 @@ name: tests
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Regression profile (full is manual; never launches training)
+        type: choice
+        options: [full, fast]
+        default: full
 
 permissions:
   contents: read
 
+concurrency:
+  group: tests-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  unit-tests:
-    runs-on: ubuntu-latest
+  regression:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    env:
+      CI_SUITE: ${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'fast' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -17,11 +35,22 @@ jobs:
           python-version: "3.11"
           cache: pip
       - name: Install pinned build tools
-        run: python -m pip install -r requirements-build-lock.txt
+        run: |
+          python -m pip install --only-binary=:all: -r requirements-build-lock.txt
       - name: Install package and test dependencies
         run: |
-          python -m pip install -r requirements-lock.txt
+          python -m pip install --only-binary=:all: -r requirements-lock.txt
           python -m pip install --no-build-isolation --no-deps -e .
-      - name: Run unit and backend capability tests
-        run: python -m pytest
+          python -m pip check
+      - name: Backend preflight and selected regression profile
+        shell: bash
+        run: python scripts/ci_checks.py --suite "$CI_SUITE" --output artifacts/ci
+      - name: Keep summary evidence (no raw logs or run artifacts)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-${{ matrix.os }}-${{ github.run_id }}
+          path: artifacts/ci/public/
+          retention-days: 7
+          if-no-files-found: warn
 
