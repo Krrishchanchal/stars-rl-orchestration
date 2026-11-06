@@ -25,6 +25,19 @@ artifacts/
 # Source PDFs are not redistributed with this project
 *.pdf
 
-# Local implementation planning and handoff notes
-/docs/
+# Reviewed scientific specifications and traceability are tracked explicitly.
+# Evidence, raw transcripts, personal progress notes and other docs stay local.
+/docs/*
+!/docs/model_specification.md
+!/docs/decisions.md
+!/docs/execution_contract.md
+!/docs/experiment_contract.md
+!/docs/implementation_plan.md
+!/docs/commit_roadmap.md
+!/docs/test_plan.md
+!/docs/test_matrix.csv
+!/docs/oracle_catalog.md
+!/docs/reproducibility.md
+!/docs/review_summary.md
+!/docs/physical_family_proposal.md
 /CONTEXT.md

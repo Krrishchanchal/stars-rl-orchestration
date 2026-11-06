@@ -4,12 +4,20 @@ This checklist separates working software from scientific readiness. Passing CI
 does not authorize a release tag. The current project is an academic prototype;
 licensing remains undecided by its owner. Repository visibility is owner-managed.
 
+These unchecked boxes are repeatable tasks for a future release review, not a
+claim that no verification has occurred. At `5b6725f`, local Windows full/fast
+checks passed 743/510 tests; hosted Windows and Ubuntu **fast** each passed 510.
+The complete quickstart was verified locally on Windows. See
+[EVIDENCE.md](EVIDENCE.md#verification-by-profile-and-platform) for source hashes,
+job links, experimental limits and the local artifact map. This documentation
+handoff does not rerun expensive checks or clear any readiness gate.
+
 ## Executable software checks
 
 - [ ] Install the pinned build/runtime wheel locks in a clean Python 3.11 venv;
   install the package using `--no-build-isolation --no-deps`; run `pip check`.
-- [ ] Run `python scripts/ci_checks.py --suite fast --output artifacts/fast`.
-- [ ] Run `python scripts/ci_checks.py --suite full --output artifacts/full`.
+- [ ] Run `.\.venv\Scripts\python.exe scripts/ci_checks.py --suite fast --output artifacts/fast`.
+- [ ] Run `.\.venv\Scripts\python.exe scripts/ci_checks.py --suite full --output artifacts/full`.
 - [ ] Confirm the backend doctor passed and JUnit contains real solver tests,
   no failed/error/skipped tests and a nonzero test count.
 - [ ] Execute the README quickstart in a new output directory. Confirm the
@@ -22,7 +30,7 @@ licensing remains undecided by its owner. Repository visibility is owner-managed
 - [ ] Run the source hygiene/evidence audit below and review its summary.
 
 ```powershell
-python -m stars_rl.experiments.release --ci-report artifacts/full/public/ci-report.json --output artifacts/release-review.json
+.\.venv\Scripts\python.exe -m stars_rl.experiments.release --ci-report artifacts/full/public/ci-report.json --output artifacts/release-review.json
 ```
 
 CI uploads only `artifacts/ci/public/`: test counts, backend versions, hashes and
@@ -52,8 +60,9 @@ directory in that shell before running the checks, as in the README setup notes.
 - [ ] Obtain the owner's licensing decision if preparing a distributable release.
   Do not infer a license from public visibility. Citation metadata is optional
   and awaits confirmed owner/authorship information.
-- [ ] Verify hosted Windows/Linux CI results. Local Windows execution does not
-  establish remote CI, Linux, Colab or notebook compatibility.
+- [ ] Verify matching **full-profile** hosted Windows/Linux CI results. The
+  verified C20 hosted fast jobs do not satisfy this item. Local Windows full,
+  hosted Ubuntu fast, Colab and notebook compatibility are distinct scopes.
 - [ ] Review and explicitly authorize a tag/publication only after these checks.
 
 `release_status.json` is the machine-readable scope ledger. The audit command's

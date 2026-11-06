@@ -9,7 +9,7 @@ The current implementation provides validated scenario inputs, authored traces, 
 - Python 3.11
 - Windows PowerShell or a POSIX-compatible shell
 
-Windows PowerShell is the locally tested platform. An Ubuntu CI workflow is configured; its remote execution and Colab have not been verified here.
+The full suite and quickstart were verified locally on Windows. Hosted fast-profile checks passed on Windows and Ubuntu at `5b6725f`; hosted full-profile and Colab execution remain unverified. See [verification details](EVIDENCE.md#verification-by-profile-and-platform).
 
 ## Setup
 
@@ -133,8 +133,11 @@ The source was clean after the commands, including generated ignored outputs.
 
 These include command startup and are a single diagnostic observation, not a
 solver-speed or scaling benchmark. Installation retries, network transfer and
-full-suite timing are separate. Only the Windows CLI paths above were executed;
-POSIX, Colab, full training and notebook execution are not verified here.
+full-suite timing are separate. The complete quickstart above was executed locally on Windows. Hosted Ubuntu fast-profile CI verifies a narrower command/test scope; Colab, actual training and notebook execution remain unverified.
+
+## Scientific contracts and current evidence
+
+Read [EVIDENCE.md](EVIDENCE.md) for software-versus-experiment status, platform/profile verification and the local evidence map. The tracked scientific authorities are the [model specification](docs/model_specification.md), [decisions](docs/decisions.md), [execution contract](docs/execution_contract.md), [experiment contract](docs/experiment_contract.md), [roadmap](docs/commit_roadmap.md) and [test traceability](docs/test_matrix.csv). The [master plan](docs/implementation_plan.md), [independent oracles](docs/oracle_catalog.md), [test plan](docs/test_plan.md), [reproduction contract](docs/reproducibility.md) and [review safeguards](docs/review_summary.md) supply supporting detail. The [physical-family proposal](docs/physical_family_proposal.md) is **UNAPPROVED**, not a replacement scenario. Local `CONTEXT.md`, raw evidence and generated runs are intentionally excluded from Git.
 
 ## Current commands
 
@@ -156,7 +159,7 @@ allocation, physical scaling extremes and original-unit residual calibration. Th
 
 Verified on Windows with CPython 3.11.4, PySCIPOpt 6.3.0 and bundled SCIP 10.0.2.
 The pinned Windows wheel installs without a separate SCIP installation or solver license.
-Linux CI is configured; its remote execution has not been verified here.
+Hosted Ubuntu fast-profile CI passed at `5b6725f`; a hosted full-profile run has not been verified.
 
 ## Scenario inputs
 
@@ -566,16 +569,14 @@ The first three are independently specified baselines, not recovered author
 MINLP methods. Definitions/defaults are in `configs/baselines.yaml`. Default
 `rho=1` is diagnostic, not a validation-tuned comparator; always report `rho=0.5`
 separately. Initial STARS setup records the forced irrelevant ratio 0.5 because
-there is no prior placement. `stars-random`/`stars-q` policy selection is not
-implemented at C12 and is rejected rather than simulated as a fixed policy.
+there is no prior placement. Fixed-method `simulate` accepts the four methods above. Random/frozen-Q policies are implemented through the RL environment and gated train/evaluate paths below; they are not extra `simulate --method` choices.
 
 The failure policy is **terminate at the first failed decision**. Proven
 infeasibility, timeout/no incumbent, missing Stage I reference and late decisions
 remain distinguishable. Remaining windows are explicitly `not_attempted`, never
 fabricated successes or zero-cost outcomes. The last committed state is retained.
 Numerical rejection and infrastructure/corrupted-data errors abort separately,
-with `transition_valid=False`; they are not ordinary network failures. No reward
-or training policy is implemented here.
+with `transition_valid=False`; they are not ordinary network failures. Reward and training-policy software is implemented separately in the RL layer below.
 
 Passing a saved **base full-model** window 0 export as `initial_export=...` runs a
 separate `common_initial_state` study: the seed is independently checked within
@@ -649,8 +650,7 @@ without solving again. Locks release after worker exit; concurrent workers canno
 publish the same run. A code/environment change requires a new run ID.
 
 These are single fixed-method episode checkpoints, with no policy RNG or Q-table
-state. They do not implement the later RL training checkpoint contract or
-mid-episode continuation. Modeled failure completes an episode and retains failed
+state. The separate RL checkpoint contract is implemented below; neither path supports mid-episode continuation. Modeled failure completes an episode and retains failed
 and `not_attempted` windows. Numerical/infrastructure failures publish diagnostic
 aborted runs, never advance the boundary, and require diagnosis rather than auto
 replay. Invalid raw numbers in aborted diagnostics have explicit `invalid_numeric`
@@ -907,8 +907,7 @@ failures retain their horizon-bounded penalized score, failure cause, raw solver
 statuses and attempted windows. Physical metrics for unattempted windows remain
 null. Infrastructure/numerical errors abort evaluation instead of being dropped
 or turned into network rewards. Saved records include source/input snapshots,
-completion rates and per-group paired differences. They are descriptive; crossed
-uncertainty estimates and publication figures remain C18 work.
+completion rates and per-group paired differences. Saved-result analysis below implements crossed exploratory uncertainty and figures; controlled fixture outputs remain descriptive software evidence.
 
 ## Saved-result tables and figures
 
@@ -992,8 +991,7 @@ Push/PR workflows run the fast profile on configured Windows and Ubuntu runners.
 The full suite is available through **Actions → tests → Run workflow → full**;
 larger regression work is explicit rather than launched on every push. Both
 profiles require the CPU backend doctor first and reject empty suites, missing
-solver tests, failures, errors and skipped tests. Hosted CI has not been executed
-from this local session; configuration is not evidence of a remote pass.
+solver tests, failures, errors and skipped tests. [Hosted run 41965773833](https://github.com/Krrishchanchal/stars-rl-orchestration/actions/runs/41965773833) passed the **fast** profile on Windows and Ubuntu at `5b6725f` (510 tests each). No C20 hosted full run was found; local full evidence is 743 tests. These results predate this documentation-only handoff.
 
 Run the same checks locally after setup, using new output directories:
 
@@ -1019,4 +1017,3 @@ above continue to apply. The notebook is optional/deferred.
 The core uses SCIP through PySCIPOpt, retains continuous CPU allocation and hard feasibility constraints, and preserves temporal repair plus two-stage orchestration. The environment selects objective-weight ratios around the independently validated optimizer. This project does not claim exact reproduction of unavailable author code or guaranteed RL superiority.
 
 See [REFERENCES.md](REFERENCES.md) for the scientific reference and clean-room implementation note.
-

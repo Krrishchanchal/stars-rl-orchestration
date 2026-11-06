@@ -2,6 +2,11 @@
 
 ## Unreleased — 0.1.0 academic prototype
 
+- Documentation handoff: track current scientific contracts/traceability,
+  reconcile obsolete status/interface notes, verify existing hosted fast CI,
+  and index preserved local evidence. No new scientific experiment or model
+  change; readiness gates and undecided licensing are preserved.
+
 - C01–C08: pinned CPU backend, typed scenarios, authored traces, continuous-CPU
   models, resource/radio/delay constraints and independent deployment validation.
 - C09–C13: temporal repair, actual-event metrics, both STARS stages, baselines,
@@ -20,5 +25,4 @@ remain open. No RL superiority or recovered author-code claim is made.
 
 Licensing is intentionally undecided at the owner's request. No release tag,
 publication, repository-visibility change or optional notebook execution is
-implied by this entry. Windows was tested locally; Linux CI is configured,
-and its remote execution remains unverified here.
+implied by this entry. At C20 completion Windows was tested locally. The 2026-11-06 documentation audit subsequently verified hosted fast-profile passes on Windows and Ubuntu at `5b6725f`; hosted full remains unverified.

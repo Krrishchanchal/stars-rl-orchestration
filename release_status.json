@@ -5,7 +5,7 @@
   "license": "undecided_by_owner",
   "citation": "optional_deferred_pending_owner_metadata",
   "release_tag": "not_created",
-  "verified_platform": "Windows CPU; remote CI/Linux/Colab not verified locally",
+  "verified_platform": "Local Windows full profile; hosted Windows/Ubuntu fast profile verified at 5b6725f; hosted full/Colab unverified",
   "gates": {
     "reference_family_physical_feasibility": "failed_under_frozen_geometry",
     "development_seed0_coverage": "failed_necessary_checks",
@@ -23,5 +23,28 @@
     "rl_superiority_demonstrated": false,
     "physical_training_ready": false
   },
-  "policy": "No tag or publication is authorized by passing regression tests. Resolve and review release blockers separately."
+  "policy": "No tag or publication is authorized by passing regression tests. Resolve and review release blockers separately.",
+  "hosted_ci_observation": {
+    "verified_date": "2026-11-06",
+    "commit": "5b6725f47bc6d7e56ed95597cf535d74cb4fd507",
+    "run_url": "https://github.com/Krrishchanchal/stars-rl-orchestration/actions/runs/41965773833",
+    "event": "push",
+    "profile": "fast",
+    "windows": {
+      "tests": 510,
+      "solver_tests": 74,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ubuntu": {
+      "tests": 510,
+      "solver_tests": 74,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "c20_hosted_full": "not_observed; workflow_dispatch query returned zero runs",
+    "remote_ci_gate_scope": "Existing not_verified gate remains unresolved for full hosted regression; fast observations do not clear it."
+  }
 }
