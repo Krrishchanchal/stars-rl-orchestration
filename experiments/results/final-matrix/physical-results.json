@@ -1,0 +1,112 @@
+[
+  {
+    "family": "paper-inputs-v1",
+    "seed": 0,
+    "windows": 14,
+    "necessary_passed": 0,
+    "min_access_flow": 5,
+    "max_access_flow": 10,
+    "initial_passed": false,
+    "seconds": 15.170303200022317,
+    "episode_status": "preflight_failed_full_episode_not_solved"
+  },
+  {
+    "family": "paper-inputs-v1",
+    "seed": 1,
+    "windows": 14,
+    "necessary_passed": 0,
+    "min_access_flow": 5,
+    "max_access_flow": 10,
+    "initial_passed": false,
+    "seconds": 10.534790900012013,
+    "episode_status": "preflight_failed_full_episode_not_solved"
+  },
+  {
+    "family": "paper-inputs-v1",
+    "seed": 2,
+    "windows": 14,
+    "necessary_passed": 0,
+    "min_access_flow": 5,
+    "max_access_flow": 10,
+    "initial_passed": false,
+    "seconds": 8.984762400039472,
+    "episode_status": "preflight_failed_full_episode_not_solved"
+  },
+  {
+    "family": "paper-inputs-v1",
+    "seed": 3,
+    "windows": 14,
+    "necessary_passed": 0,
+    "min_access_flow": 5,
+    "max_access_flow": 10,
+    "initial_passed": false,
+    "seconds": 15.531206700019538,
+    "episode_status": "preflight_failed_full_episode_not_solved"
+  },
+  {
+    "family": "paper-inputs-v1",
+    "seed": 4,
+    "windows": 14,
+    "necessary_passed": 0,
+    "min_access_flow": 5,
+    "max_access_flow": 10,
+    "initial_passed": false,
+    "seconds": 15.52220840001246,
+    "episode_status": "preflight_failed_full_episode_not_solved"
+  },
+  {
+    "family": "development-physical-v1",
+    "seed": 0,
+    "windows": 14,
+    "necessary_passed": 1,
+    "min_access_flow": 1,
+    "max_access_flow": 4,
+    "initial_passed": false,
+    "seconds": 14.630306000006385,
+    "episode_status": "preflight_failed_full_episode_not_solved"
+  },
+  {
+    "family": "development-physical-v1",
+    "seed": 1,
+    "windows": 14,
+    "necessary_passed": 10,
+    "min_access_flow": 0,
+    "max_access_flow": 4,
+    "initial_passed": true,
+    "seconds": 12.663135699986015,
+    "episode_status": "preflight_failed_full_episode_not_solved"
+  },
+  {
+    "family": "development-physical-v1",
+    "seed": 2,
+    "windows": 14,
+    "necessary_passed": 1,
+    "min_access_flow": 0,
+    "max_access_flow": 4,
+    "initial_passed": true,
+    "seconds": 7.155388599960133,
+    "episode_status": "preflight_failed_full_episode_not_solved"
+  },
+  {
+    "family": "development-physical-v1",
+    "seed": 3,
+    "windows": 14,
+    "necessary_passed": 2,
+    "min_access_flow": 1,
+    "max_access_flow": 4,
+    "initial_passed": false,
+    "seconds": 11.285572799970396,
+    "episode_status": "preflight_failed_full_episode_not_solved"
+  },
+  {
+    "family": "development-physical-v1",
+    "seed": 4,
+    "windows": 14,
+    "necessary_passed": 1,
+    "min_access_flow": 0,
+    "max_access_flow": 4,
+    "initial_passed": false,
+    "seconds": 15.187742599984631,
+    "episode_status": "preflight_failed_full_episode_not_solved"
+  }
+]

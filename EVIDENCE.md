@@ -155,3 +155,7 @@ notes. The demo was intentionally committed at C19; those old notes are not the
 current Git status. Original equations/interpretations are in the tracked
 [scientific specifications](docs/model_specification.md) and
 [decision register](docs/decisions.md), with [98 software traceability rows](docs/test_matrix.csv).
+
+## Final experiment programme
+
+The [experiment index](experiments/README.md) records 51 new simulation attempts, ten physical trace audits/140 snapshots, and the complete outcome tables. [Selected findings](experiments/SELECTED_FINDINGS.md) explain the report-worthy results and limitations. Saved authored outputs were independently revalidated: 49 episode records, 100 committed deployments, all passed. The compact final inputs, raw compressed outputs, figures and summaries are tracked. The 3,129-file legacy snapshot archive remains local and ignored. No new native trained-policy result is claimed.

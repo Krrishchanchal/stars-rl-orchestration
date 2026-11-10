@@ -1,0 +1,38 @@
+[
+  {
+    "family": "development-physical-v1",
+    "seed": 1,
+    "wall_seconds": 67.7446691999794,
+    "exit": 0,
+    "supervisor_reason": null,
+    "episode_status": "failed",
+    "approved_windows": 0,
+    "window_statuses": [
+      {
+        "index": 0,
+        "status": "failed",
+        "reason": "timelimit"
+      }
+    ],
+    "parent_pid_peak_bytes": 4927488,
+    "memory_measurement_scope": "PID only; Windows venv launcher may have child processes; not a process-tree memory certificate"
+  },
+  {
+    "family": "development-physical-v1",
+    "seed": 2,
+    "wall_seconds": 20.73965949995909,
+    "exit": 0,
+    "supervisor_reason": null,
+    "episode_status": "failed",
+    "approved_windows": 0,
+    "window_statuses": [
+      {
+        "index": 0,
+        "status": "failed",
+        "reason": "infeasible"
+      }
+    ],
+    "parent_pid_peak_bytes": 4935680,
+    "memory_measurement_scope": "PID only; Windows venv launcher may have child processes; not a process-tree memory certificate"
+  }
+]

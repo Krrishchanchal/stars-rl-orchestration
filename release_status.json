@@ -13,7 +13,7 @@
     "representative_action_sensitivity": "open",
     "trained_policy_pilot": "not_run",
     "scientific_held_out_evaluation": "not_run",
-    "remote_ci": "not_verified",
+    "remote_ci": "fast_verified_windows_ubuntu_at_5b6725f_full_unverified",
     "optional_notebook": "deferred"
   },
   "claims": {

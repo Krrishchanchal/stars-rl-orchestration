@@ -1,0 +1,673 @@
+{
+  "schema_version": 1,
+  "scenario_id": "load-24",
+  "family_id": "final-authored-matrix-v1",
+  "family_classification": "analytical_fixture",
+  "window_count": 3,
+  "window_seconds": 60,
+  "metadata": {
+    "scenario_group_id": "load-24",
+    "root_lineage_id": "final-authored-matrix-v1",
+    "constellation_id": "four-disconnected-hosts",
+    "layout_id": "load-24",
+    "demand_family_id": "toy-demand-v1",
+    "epoch_utc": null,
+    "interval_start_seconds": 0,
+    "interval_end_seconds": 180,
+    "generation": {
+      "method": "authored",
+      "rng_algorithm": null,
+      "rng_library_version": null,
+      "seeds": [],
+      "draws": []
+    }
+  },
+  "radio": {
+    "carrier_hz": 14000000000,
+    "transmit_watts": 0.1,
+    "user_gain_dbi": 15,
+    "satellite_gain_dbi": 40,
+    "bandwidth_hz": 100000000,
+    "temperature_kelvin": 290,
+    "interference_model": "exogenous",
+    "external_interference_watts": 0,
+    "speed_of_light_mps": 299792458,
+    "boltzmann_joules_per_kelvin": 1.380649e-23
+  },
+  "function_types": [
+    {
+      "id": "f0",
+      "psi_instructions_per_bit": 10,
+      "omega_instructions_per_bit": 10,
+      "base_overhead_mips": 5
+    },
+    {
+      "id": "f1",
+      "psi_instructions_per_bit": 20,
+      "omega_instructions_per_bit": 20,
+      "base_overhead_mips": 10
+    }
+  ],
+  "slices": [
+    {
+      "id": "slice0",
+      "chain": [
+        "f0",
+        "f1"
+      ],
+      "demand_mbps": 2,
+      "packet_bits": 12000,
+      "delay_limit_seconds": 0.05
+    },
+    {
+      "id": "slice1",
+      "chain": [
+        "f0",
+        "f1"
+      ],
+      "demand_mbps": 3,
+      "packet_bits": 12000,
+      "delay_limit_seconds": 0.05
+    }
+  ],
+  "users": [
+    {
+      "id": "u00",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u01",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u02",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u03",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u04",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u05",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u06",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u07",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u08",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u09",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u10",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u11",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u12",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u13",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u14",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u15",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u16",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u17",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u18",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u19",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u20",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u21",
+      "slice_id": "slice1",
+      "coordinates": null
+    },
+    {
+      "id": "u22",
+      "slice_id": "slice0",
+      "coordinates": null
+    },
+    {
+      "id": "u23",
+      "slice_id": "slice1",
+      "coordinates": null
+    }
+  ],
+  "ground_stations": [
+    {
+      "id": "g0",
+      "coordinates": null
+    }
+  ],
+  "satellites": [
+    {
+      "id": "s0",
+      "cpu_capacity_mips": 1000,
+      "access_capacity": 5,
+      "egress_capacity": 5,
+      "max_active_instances": 4
+    },
+    {
+      "id": "s1",
+      "cpu_capacity_mips": 1000,
+      "access_capacity": 5,
+      "egress_capacity": 5,
+      "max_active_instances": 4
+    },
+    {
+      "id": "s2",
+      "cpu_capacity_mips": 1000,
+      "access_capacity": 5,
+      "egress_capacity": 5,
+      "max_active_instances": 4
+    },
+    {
+      "id": "s3",
+      "cpu_capacity_mips": 1000,
+      "access_capacity": 5,
+      "egress_capacity": 5,
+      "max_active_instances": 4
+    }
+  ],
+  "instances": [
+    {
+      "function_type_id": "f0",
+      "instance_id": "i0",
+      "satellite_id": "s0"
+    },
+    {
+      "function_type_id": "f1",
+      "instance_id": "i0",
+      "satellite_id": "s0"
+    },
+    {
+      "function_type_id": "f0",
+      "instance_id": "i0",
+      "satellite_id": "s1"
+    },
+    {
+      "function_type_id": "f1",
+      "instance_id": "i0",
+      "satellite_id": "s1"
+    },
+    {
+      "function_type_id": "f0",
+      "instance_id": "i0",
+      "satellite_id": "s2"
+    },
+    {
+      "function_type_id": "f1",
+      "instance_id": "i0",
+      "satellite_id": "s2"
+    },
+    {
+      "function_type_id": "f0",
+      "instance_id": "i0",
+      "satellite_id": "s3"
+    },
+    {
+      "function_type_id": "f1",
+      "instance_id": "i0",
+      "satellite_id": "s3"
+    }
+  ],
+  "access_schedule": [
+    {
+      "window_index": 0,
+      "links": [
+        {
+          "user_id": "u00",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u01",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u02",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u03",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u04",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u05",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u06",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u07",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u08",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u09",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u10",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u11",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u12",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u13",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u14",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u15",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u16",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u17",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u18",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u19",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u20",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u21",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u22",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u23",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        }
+      ]
+    },
+    {
+      "window_index": 1,
+      "links": [
+        {
+          "user_id": "u00",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u01",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u02",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u03",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u04",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u05",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u06",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u07",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u08",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u09",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u10",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u11",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u12",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u13",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u14",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u15",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u16",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u17",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u18",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u19",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u20",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u21",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u22",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u23",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        }
+      ]
+    },
+    {
+      "window_index": 2,
+      "links": [
+        {
+          "user_id": "u00",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u01",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u02",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u03",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u04",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u05",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u06",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u07",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u08",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u09",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u10",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u11",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u12",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u13",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u14",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u15",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u16",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u17",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u18",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u19",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u20",
+          "satellite_id": "s0",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u21",
+          "satellite_id": "s1",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u22",
+          "satellite_id": "s2",
+          "distance_m": 500000
+        },
+        {
+          "user_id": "u23",
+          "satellite_id": "s3",
+          "distance_m": 500000
+        }
+      ]
+    }
+  ],
+  "ground_links": [
+    {
+      "satellite_id": "s0",
+      "ground_station_id": "g0",
+      "distance_m": 500000
+    },
+    {
+      "satellite_id": "s1",
+      "ground_station_id": "g0",
+      "distance_m": 500000
+    },
+    {
+      "satellite_id": "s2",
+      "ground_station_id": "g0",
+      "distance_m": 500000
+    },
+    {
+      "satellite_id": "s3",
+      "ground_station_id": "g0",
+      "distance_m": 500000
+    }
+  ],
+  "isl_links": []
+}

@@ -40,4 +40,11 @@ artifacts/
 !/docs/reproducibility.md
 !/docs/review_summary.md
 !/docs/physical_family_proposal.md
+!/docs/USAGE.md
 /CONTEXT.md
+
+# Keep complete legacy snapshots and machine transcripts locally.
+# Compact final experiment inputs, raw gzip records, summaries and figures are tracked.
+/experiments/archive/
+/experiments/*.log
+/experiments/results/**/physical/*-prefix.log
