@@ -1,33 +1,21 @@
-# STARS-RL Orchestration
+# STARS + RL
 
-An independent Python implementation of stability-aware security function chain orchestration in LEO satellite networks, based on STARS, with an RL extension for selecting stability-weight ratios.
+This project implements STARS for placing security function chains in a changing satellite network. It selects the user's access satellite, function hosts, ground-station route and CPU allocation while checking throughput, capacity and delay requirements.
 
-The optimizer chooses user access, satellite/ground-station egress, function instances and continuous CPU allocations. Temporal repair and two optimization stages handle changing connectivity. Every committed deployment passes independent constraint and objective validation.
+The implementation uses Python and SCIP. Stage I selects satellite associations; Stage II solves the complete placement problem. The RL extension selects the stability-weight ratio used by Stage II.
 
-## Results at a glance
+## 1. Requirements
 
-| Experiment | Measured outcome |
-|---|---|
-| 32 users / 8 authored satellites | Three validated windows; four access switches and eight function-host moves. |
-| 64 users / 16 authored satellites | First window exceeded the ten-second decision budget; no deployment committed. |
-| Repeated 16-user handover | STARS completed 3/3 episodes; summed decision time 1.09–1.92 s per episode. Hierarchy-only performed similarly; temporal monolithic took 9.88–10.96 s. |
-| Resource pressure | Tested both feasible and infeasible user loads, CPU capacities, throughput demands and delay limits. |
-| Physical families | All five predetermined seeds retained per family; none passed all fourteen snapshot checks. Two initially passing development traces were attempted through the optimizer: one timed out and one was infeasible. |
-| RL action sensitivity | Constructed cases show a 1.9 return difference and reversal of the preferred weight. No trained-policy superiority is established. |
+- Python **3.11**
+- Dependencies listed in `requirements-lock.txt`
+- A compatible PySCIPOpt wheel, which bundles SCIP on the tested platform
+- Matplotlib only if you want to generate figures
 
-These are case-study measurements, not claims of universal improvement. Authored connectivity experiments and physical orbit generation are distinct. The implementation includes learning/evaluation software, but native training and scientific held-out evaluation remain blocked by readiness requirements.
+The recorded experiments ran on CPU. A GPU and Gurobi license are not required. Setup and demos were tested locally on Windows; hosted fast checks also passed on Windows and Ubuntu.
 
-**Read the evidence:** [selected findings](experiments/SELECTED_FINDINGS.md), [complete summary](experiments/report-evidence/SUMMARY.md), [all measured outcomes](experiments/results/final-matrix/authored-results.csv), [physical seed audits](experiments/results/final-matrix/physical-results.csv), and [experiment protocol](experiments/README.md).
+## 2. Installation
 
-![Method completion under changing handover intensity](experiments/report-evidence/handover-methods.png)
-
-## Requirements and setup
-
-- Python 3.11 and a compatible PySCIPOpt wheel; no Gurobi license or GPU is needed.
-- Windows full-suite and quickstart execution have been verified locally.
-- Hosted Windows and Ubuntu fast checks passed at `5b6725f`. Hosted full checks and Colab are not established by that evidence.
-
-From the repository root in PowerShell:
+Open PowerShell in the repository folder and run:
 
 ```powershell
 python -m venv .venv
@@ -35,64 +23,88 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements-lock.txt
 .\.venv\Scripts\python.exe -m pip install --no-build-isolation --no-deps -e .
 .\.venv\Scripts\python.exe -m pip check
-.\.venv\Scripts\python.exe -m stars_rl.cli doctor --solver
 ```
 
-For POSIX commands and detailed troubleshooting, see [the usage reference](docs/USAGE.md). Matplotlib is optional for rendering saved figures and may use a separate interpreter.
-
-## Live handover demo
+No separate compilation step is needed. In the commands below, `$py` points to this environment:
 
 ```powershell
-.\.venv\Scripts\python.exe examples/demo.py --output runs/new-handover
-Start-Process .\runs\new-handover\index.html
+$py = ".\.venv\Scripts\python.exe"
+& $py -m stars_rl.cli doctor --solver
 ```
 
-This solves a one-user, two-function, three-window authored handover and writes an HTML explanation, summary and raw solver/validation records. Initialization counts as zero changes. Use a new output directory for each invocation.
+The doctor checks the solver installation and prints its results. Keep using the same PowerShell window, or set `$py` again in a new one.
 
-For sixteen simultaneous users with four satellites:
+## 3. Run the handover demo
 
 ```powershell
-.\.venv\Scripts\python.exe -m stars_rl.cli generate --scenario experiments/inputs/authored-16users-v1.yaml --output runs/new-16-trace.json
-.\.venv\Scripts\python.exe -m stars_rl.cli simulate --trace runs/new-16-trace.json --output-root runs --run-id new-16 --method stars-fixed --rho 0.5 --budget 10
-.\.venv\Scripts\python.exe -m stars_rl.cli validate --run-dir runs/new-16/stars-fixed
+& $py examples/demo.py --output runs/demo-01
+Start-Process .\runs\demo-01\index.html
 ```
 
-The visibility changes are authored; placement and CPU allocation are solved. The fixed-ratio commands do not train or invoke a learned policy. Other methods are `mono-delay`, `mono-temporal` and `hier-only`; these are independently specified comparison methods.
+This runs three windows. When the user loses access to the first satellite, the optimizer moves the two functions to the new host. The browser page shows the route, CPU allocations, delay and change counts.
 
-## Tests and experiments
+The output folder contains `index.html`, `summary.json` and `raw_result.json`. **Use a new output folder for every run.** This example uses authored connectivity and real solver calls.
+
+## 4. Run the 16-user scenario
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest
-.\.venv\Scripts\python.exe scripts/ci_checks.py --suite full --output artifacts/new-full-check
+& $py -m stars_rl.cli generate --scenario experiments/inputs/authored-16users-v1.yaml --output runs/trace-16.json
+& $py -m stars_rl.cli simulate --trace runs/trace-16.json --output-root runs --run-id demo-16 --method stars-fixed --rho 0.5 --budget 10
+& $py -m stars_rl.cli validate --run-dir runs/demo-16/stars-fixed
 ```
 
-The recorded full regression passed 743 tests including 183 solver tests. Subsequent saved-output revalidation checked 100 committed deployments across 49 authored episode records. These are correctness checks, not independent performance samples.
+The scenario contains 16 users and four satellites across three windows. Four users change access after the first window. Both optimization stages run, followed by independent validation.
 
-To execute the declared experiment matrix:
+This command uses the fixed ratio `0.5`. Other supported comparison methods are `mono-delay`, `mono-temporal` and `hier-only`. The scenario's visibility is authored; it is separate from the orbital physical scenarios.
+
+## 5. Run the tests
 
 ```powershell
-.\.venv\Scripts\python.exe experiments/run_final_matrix.py --output experiments/results/new-matrix
+& $py -m pytest
 ```
 
-The matrix covers user and satellite counts, handovers, CPU/demand/delay pressure and ten physical traces. It retains failures and explicitly labels reused identical inputs. Supplementary capacity, runtime-repeat and physical-episode commands are documented in [experiments/README.md](experiments/README.md).
+For the full verification profile, including the backend preflight:
 
-## Repository guide
+```powershell
+& $py scripts/ci_checks.py --suite full --output artifacts/check-01
+```
 
-| Location | Contents |
-|---|---|
-| `src/stars_rl/` | Schemas, physics, topology, optimization, validation, simulation, RL and analysis. |
-| `configs/` | Frozen toy/physical families and baseline settings. |
-| `tests/` | Unit, solver, integration and software-verification checks with independent fixtures. |
-| `examples/` | Live handover and explicitly untrained saved-policy demonstrations. |
-| `experiments/` | Experiment runners, exact inputs, compressed final raw records, summaries and figures. |
-| `docs/` | Mathematical model, decisions, execution/experiment contracts and detailed usage. |
+The recorded full regression passed **743 tests**, including **183 solver tests**. The final experiment outputs were also independently checked again: all **100 committed deployments** passed. These counts describe recorded checks; a new run produces its own results.
 
-Start with the [model](docs/model_specification.md), [decisions](docs/decisions.md) and [execution contract](docs/execution_contract.md) for the scientific assumptions. See [EVIDENCE.md](EVIDENCE.md) for verification scope and [README.txt](README.txt) for plain-text submission instructions.
+## 6. Experiments and results
 
-The compact final experiment records are included. Virtual environments, scratch files, machine transcripts, bulk legacy archives and duplicated historical run snapshots remain local and ignored. Their absence from Git does not remove the failed cases from the tracked result tables. The older complete archive remains preserved locally at `experiments/archive/previous-complete-evidence.zip`.
+The experiments cover user load, satellite count, handovers, resource pressure, method comparisons and physical coverage.
 
-## Reference and scope
+- **32 users on eight satellites** completed three validated windows.
+- **64 users on sixteen satellites** exceeded the first window's deadline.
+- Repeated sixteen-user runs showed lower decision times for the hierarchical methods than the tested monolithic methods. Hierarchy-only performed similarly to STARS on those cases.
+- The controlled RL experiment showed that the preferred weight can change with future connectivity. A trained-policy improvement has not been demonstrated; physical training remains blocked by readiness checks.
 
-M. Mahyoub, W. Jaafar, S. Muhaidat and H. Yanikomeroglu, “STARS: Stability-Aware SFC Orchestration and Associations in LEO Satellite Networks,” *IEEE Transactions on Network and Service Management*, vol. 23, pp. 3326–3340, 2026. DOI: [10.1109/TNSM.2026.3674391](https://doi.org/10.1109/TNSM.2026.3674391).
+Read the [selected findings](experiments/SELECTED_FINDINGS.md) for interpretation, or the [complete tables and figures](experiments/report-evidence/SUMMARY.md) for all recorded cases. Successes, infeasible inputs and deadline failures are retained.
 
-No author implementation code was copied. See [REFERENCES.md](REFERENCES.md). Public visibility does not imply a license; licensing remains undecided by the owner. No paper-scale replication or trained RL gain is claimed.
+To rerun the main matrix:
+
+```powershell
+& $py experiments/run_final_matrix.py --output experiments/results/matrix-02
+```
+
+This may take several minutes. [Experiment instructions](experiments/README.md) describe the exact inputs, supplementary runs and output files.
+
+## 7. Documentation
+
+- [Detailed command reference and troubleshooting](docs/USAGE.md)
+- [System model and formulation](docs/model_specification.md)
+- [Implementation decisions](docs/decisions.md)
+- [Execution rules and budgets](docs/execution_contract.md)
+- [Scenario and RL definitions](docs/experiment_contract.md)
+- [Test plan](docs/test_plan.md) and [test matrix](docs/test_matrix.csv)
+- [Recorded verification evidence](EVIDENCE.md)
+- [Plain-text instructions](README.txt)
+
+The repository includes the final configurations, compact raw outputs, tables and figures. Environments, scratch files, machine logs and bulky legacy snapshots are excluded from Git; the complete legacy archive remains preserved locally.
+
+## Reference
+
+M. Mahyoub, W. Jaafar, S. Muhaidat and H. Yanikomeroglu, “STARS: Stability-Aware SFC Orchestration and Associations in LEO Satellite Networks,” *IEEE Transactions on Network and Service Management*, vol. 23, pp. 3326–3340, 2026. [DOI: 10.1109/TNSM.2026.3674391](https://doi.org/10.1109/TNSM.2026.3674391).
+
+This is an independent implementation with documented interpretations and an RL extension. No author implementation code was copied. See [REFERENCES.md](REFERENCES.md) for attribution.

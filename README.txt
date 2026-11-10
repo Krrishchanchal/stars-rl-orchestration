@@ -49,7 +49,8 @@ blocked. Constructed action-sensitivity and an untrained checkpoint replay are
 not trained-policy improvements. Do not fabricate learning curves.
 
 7. Complete technical documentation
-README.md: full supported commands and detailed usage.
+README.md: readable setup and demonstration guide.
+docs/USAGE.md: detailed supported commands and usage.
 docs/model_specification.md and docs/decisions.md: equations and interpretations.
 docs/execution_contract.md and docs/experiment_contract.md: budgets, metrics,
 residuals, observations, rewards and scientific controls.
