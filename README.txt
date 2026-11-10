@@ -1,4 +1,4 @@
-STARS + RL — implementation and experimental evidence
+STARS + RL — setup and usage
 
 1. Requirements
 Python 3.11; PySCIPOpt/SCIP and other exact versions in requirements-lock.txt.
@@ -32,12 +32,8 @@ Read experiments/README.md before launching. It lists every intervention,
 physical seed, output schema, failed-case handling and supplementary command.
 Run the final matrix with:
 .\.venv\Scripts\python.exe experiments/run_final_matrix.py --output experiments/results/new-matrix
-This takes several minutes and writes substantial raw evidence. Existing
-results/final-matrix inputs, gzip episode records and CSVs are included.
-The earlier complete evidence is retained locally in experiments/archive/previous-complete-evidence.zip (excluded from Git). Compact final records and the full outcome tables are included in the repository.
-The selected interpretation is experiments/SELECTED_FINDINGS.md; the complete
-tables and images are in experiments/report-evidence/. No result is omitted
-from the archive merely because a method failed or tied another method.
+This takes several minutes and writes generated results locally.
+Published tables and figures are in experiments/results-summary/.
 
 6. Readiness and claims
 The tested core retains continuous CPU allocation and hard feasibility checks.
@@ -46,18 +42,9 @@ physical families fail full-episode necessary checks across the tested seeds.
 Two initially passing development traces were also attempted through the solver:
 one timed out and one was infeasible. Native training/held-out evaluation remains
 blocked. Constructed action-sensitivity and an untrained checkpoint replay are
-not trained-policy improvements. Do not fabricate learning curves.
+not trained-policy improvements.
 
 7. Complete technical documentation
 README.md: readable setup and demonstration guide.
 docs/USAGE.md: detailed supported commands and usage.
-docs/model_specification.md and docs/decisions.md: equations and interpretations.
-docs/execution_contract.md and docs/experiment_contract.md: budgets, metrics,
-residuals, observations, rewards and scientific controls.
-docs/test_plan.md, docs/test_matrix.csv, docs/oracle_catalog.md: test coverage.
 REFERENCES.md: research paper and clean-room implementation attribution.
-
-The final academic report PDF, its zipped LaTeX source, original/final presentation
-files and source paper must be added separately to the submission package.
-Licensing remains the owner's decision. No remote publication is performed by
-these instructions.

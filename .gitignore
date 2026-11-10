@@ -28,19 +28,6 @@ artifacts/
 # Reviewed scientific specifications and traceability are tracked explicitly.
 # Evidence, raw transcripts, personal progress notes and other docs stay local.
 /docs/*
-!/docs/model_specification.md
-!/docs/decisions.md
-!/docs/execution_contract.md
-!/docs/experiment_contract.md
-!/docs/implementation_plan.md
-!/docs/commit_roadmap.md
-!/docs/test_plan.md
-!/docs/test_matrix.csv
-!/docs/oracle_catalog.md
-!/docs/reproducibility.md
-!/docs/review_summary.md
-!/docs/physical_family_proposal.md
-!/docs/USAGE.md
 /CONTEXT.md
 
 # Keep complete legacy snapshots and machine transcripts locally.
@@ -48,3 +35,15 @@ artifacts/
 /experiments/archive/
 /experiments/*.log
 /experiments/results/**/physical/*-prefix.log
+
+!/docs/USAGE.md
+
+# Private project notes and raw experiment records (preserved locally).
+/EVIDENCE.md
+/RELEASE_CHECKLIST.md
+/CHANGELOG.md
+/experiments/COMPLETION.json
+/experiments/SELECTED_FINDINGS.md
+/experiments/verify_final.py
+/experiments/report-evidence/
+/experiments/results/

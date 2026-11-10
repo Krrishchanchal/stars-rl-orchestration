@@ -80,7 +80,7 @@ The experiments cover user load, satellite count, handovers, resource pressure, 
 - Repeated sixteen-user runs showed lower decision times for the hierarchical methods than the tested monolithic methods. Hierarchy-only performed similarly to STARS on those cases.
 - The controlled RL experiment showed that the preferred weight can change with future connectivity. A trained-policy improvement has not been demonstrated; physical training remains blocked by readiness checks.
 
-Read the [selected findings](experiments/SELECTED_FINDINGS.md) for interpretation, or the [complete tables and figures](experiments/report-evidence/SUMMARY.md) for all recorded cases. Successes, infeasible inputs and deadline failures are retained.
+See the [experiment results](experiments/results-summary/README.md) for measured tables and figures, including successes, infeasible inputs and deadline failures.
 
 To rerun the main matrix:
 
@@ -93,15 +93,9 @@ This may take several minutes. [Experiment instructions](experiments/README.md) 
 ## 7. Documentation
 
 - [Detailed command reference and troubleshooting](docs/USAGE.md)
-- [System model and formulation](docs/model_specification.md)
-- [Implementation decisions](docs/decisions.md)
-- [Execution rules and budgets](docs/execution_contract.md)
-- [Scenario and RL definitions](docs/experiment_contract.md)
-- [Test plan](docs/test_plan.md) and [test matrix](docs/test_matrix.csv)
-- [Recorded verification evidence](EVIDENCE.md)
 - [Plain-text instructions](README.txt)
 
-The repository includes the final configurations, compact raw outputs, tables and figures. Environments, scratch files, machine logs and bulky legacy snapshots are excluded from Git; the complete legacy archive remains preserved locally.
+The repository contains runnable configurations, experiment scripts, result tables and figures. Generated raw runs, personal planning notes, review records and machine logs are kept outside Git.
 
 ## Reference
 

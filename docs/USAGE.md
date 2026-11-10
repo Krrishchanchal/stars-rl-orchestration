@@ -1,6 +1,5 @@
 # Detailed usage and implementation reference
 
-The final experimental archive is documented in [experiments/README.md](../experiments/README.md). It includes user/satellite load, handover intensity, CPU/demand/delay pressure, both physical families across five predetermined seeds, and the complete earlier native/shared-start and weight-sensitivity evidence. Consult the experiment summaries for actual successes, failures and scope; implementation availability does not imply a completed trained-policy evaluation.
 
 An independent Python implementation of optimization-based STARS orchestration, followed by a reinforcement-learning extension that selects stability-weight ratios around the optimizer.
 
@@ -11,7 +10,7 @@ The current implementation provides validated scenario inputs, authored traces, 
 - Python 3.11
 - Windows PowerShell or a POSIX-compatible shell
 
-The full suite and quickstart were verified locally on Windows. Hosted fast-profile checks passed on Windows and Ubuntu at `5b6725f`; hosted full-profile and Colab execution remain unverified. See [verification details](../EVIDENCE.md#verification-by-profile-and-platform).
+The full suite and quickstart were verified locally on Windows. Hosted fast-profile checks passed on Windows and Ubuntu at `5b6725f`; hosted full-profile and Colab execution remain unverified.
 
 ## Setup
 
@@ -139,7 +138,6 @@ full-suite timing are separate. The complete quickstart above was executed local
 
 ## Scientific contracts and current evidence
 
-Read [EVIDENCE.md](../EVIDENCE.md) for software-versus-experiment status, platform/profile verification and the local evidence map. The tracked scientific authorities are the [model specification](model_specification.md), [decisions](decisions.md), [execution contract](execution_contract.md), [experiment contract](experiment_contract.md), [roadmap](commit_roadmap.md) and [test traceability](test_matrix.csv). The [master plan](implementation_plan.md), [independent oracles](oracle_catalog.md), [test plan](test_plan.md), [reproduction contract](reproducibility.md) and [review safeguards](review_summary.md) supply supporting detail. The [physical-family proposal](physical_family_proposal.md) is **UNAPPROVED**, not a replacement scenario. Local `CONTEXT.md`, raw evidence and generated runs are intentionally excluded from Git.
 
 ## Current commands
 
@@ -982,18 +980,15 @@ training, scientific held-out comparisons and an RL superiority claim remain
 unsupported by the available data. No published reference percentages are
 inserted into measured results.
 
-## CI and academic handoff status
+## Continuous integration
 
-The C01–C20 software implementation roadmap ends here. See
-[EVIDENCE.md](../EVIDENCE.md), [CHANGELOG.md](../CHANGELOG.md), and
-[RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md) for executed checks and remaining
-scientific/owner decisions. `release_status.json` keeps these scopes machine-readable.
+The CI checks use `release_status.json` as their machine-readable configuration.
 
 Push/PR workflows run the fast profile on configured Windows and Ubuntu runners.
 The full suite is available through **Actions → tests → Run workflow → full**;
 larger regression work is explicit rather than launched on every push. Both
 profiles require the CPU backend doctor first and reject empty suites, missing
-solver tests, failures, errors and skipped tests. [Hosted run 41965773833](https://github.com/Krrishchanchal/stars-rl-orchestration/actions/runs/41965773833) passed the **fast** profile on Windows and Ubuntu at `5b6725f` (510 tests each). No C20 hosted full run was found; local full evidence is 743 tests. These results predate this documentation-only handoff.
+solver tests, failures, errors and skipped tests. [Hosted run 41965773833](https://github.com/Krrishchanchal/stars-rl-orchestration/actions/runs/41965773833) passed the **fast** profile on Windows and Ubuntu at `5b6725f` (510 tests each). No C20 hosted full run was found; local full evidence is 743 tests.
 
 Run the same checks locally after setup, using new output directories:
 
